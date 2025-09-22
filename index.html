@@ -1,0 +1,1112 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>InfoQuantity Academy - 情報量の基礎学習ツール</title>
+  <meta name="description" content="情報量とエントロピーの段階的学習システム。対数クイズから始まり、直感訓練、計算実習、理論確認、実世界応用まで体系的に学習。インタラクティブなグラフと計算器で I(a)=-log2 P(a) を完全理解。" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self';" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode">
+    <span id="theme-icon">🌙</span>
+  </button>
+
+  <header class="site-header">
+    <h1>InfoQuantity Academy - 情報量の基礎学習ツール</h1>
+    <p class="subtitle">コンピューターサイエンスや数学に不慣れでも、「情報量」の直感と定義・性質を対話的に学べる入門ツールです</p>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="InfoQuantity Academy Tabs">
+    <button class="tab active" data-tab="tab-basics" aria-selected="true">1. 基礎知識</button>
+    <button class="tab" data-tab="tab-def" aria-selected="false">2. 情報量の定義</button>
+    <button class="tab" data-tab="tab-intuition" aria-selected="false">3. 体感</button>
+    <button class="tab" data-tab="tab-calc" aria-selected="false">4. 計算例</button>
+    <button class="tab" data-tab="tab-add" aria-selected="false">5. 加算性</button>
+    <button class="tab" data-tab="tab-prop" aria-selected="false">6. 性質</button>
+    <button class="tab" data-tab="tab-applications" aria-selected="false">7. エントロピー・応用</button>
+  </nav>
+
+  <main>
+    <!-- 1. 基礎知識 -->
+    <section id="tab-basics" class="panel active" aria-labelledby="1. 基礎知識">
+      <h2>基礎知識：対数の理解度チェック</h2>
+
+      <div class="card">
+        <h3>🧩 対数クイズ</h3>
+        <p>情報量の学習には対数の基本的な理解が必要です。以下のクイズで確認してみましょう。</p>
+
+        <div class="quiz-container">
+          <div class="quiz-question">
+            <h4>問題1: log₂ 8 = ?</h4>
+            <div class="quiz-options">
+              <label><input type="radio" name="q1" value="a"> 2</label>
+              <label><input type="radio" name="q1" value="b"> 3</label>
+              <label><input type="radio" name="q1" value="c"> 4</label>
+              <label><input type="radio" name="q1" value="d"> 8</label>
+            </div>
+            <div class="quiz-result" id="q1-result"></div>
+          </div>
+
+          <div class="quiz-question">
+            <h4>問題2: log₂ (1/4) = ?</h4>
+            <div class="quiz-options">
+              <label><input type="radio" name="q2" value="a"> -2</label>
+              <label><input type="radio" name="q2" value="b"> -1/4</label>
+              <label><input type="radio" name="q2" value="c"> 1/4</label>
+              <label><input type="radio" name="q2" value="d"> 4</label>
+            </div>
+            <div class="quiz-result" id="q2-result"></div>
+          </div>
+
+          <div class="quiz-question">
+            <h4>問題3: 2ˣ = 16 のとき、x = ?</h4>
+            <div class="quiz-options">
+              <label><input type="radio" name="q3" value="a"> 2</label>
+              <label><input type="radio" name="q3" value="b"> 4</label>
+              <label><input type="radio" name="q3" value="c"> 8</label>
+              <label><input type="radio" name="q3" value="d"> 16</label>
+            </div>
+            <div class="quiz-result" id="q3-result"></div>
+          </div>
+        </div>
+
+        <div class="quiz-summary">
+          <p id="quiz-total">正解数: 0/3</p>
+          <button id="quiz-reset">リセット</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📚 段階的導入：なぜ対数なのか？</h3>
+        <p>情報量の定義に対数が使われる理由を、段階的に理解していきましょう。</p>
+
+        <div class="accordion">
+          <details>
+            <summary>ステップ1: 「珍しさ」と「情報の価値」</summary>
+            <p>日常生活で考えてみると：</p>
+            <ul>
+              <li>「明日は雨が降る」（確率30%）→ まあまあ珍しい → 少し意味のある情報</li>
+              <li>「明日は隕石が落ちる」（確率0.001%）→ 非常に珍しい → 極めて重要な情報</li>
+              <li>「明日は太陽が昇る」（確率99.99%）→ 当たり前 → ほとんど意味のない情報</li>
+            </ul>
+            <p>つまり、<strong>確率が低い（珍しい）ほど、情報として価値が高い</strong>と直感的に感じられます。</p>
+          </details>
+
+          <details>
+            <summary>ステップ2: 独立事象の組み合わせ</summary>
+            <p>2つの独立した出来事が同時に起こる場合を考えてみましょう：</p>
+            <ul>
+              <li>コインで表が出る（1/2）+ サイコロで6が出る（1/6）</li>
+              <li>同時に起こる確率：1/2 × 1/6 = 1/12</li>
+              <li>情報の価値は「足し算」されるべき：I(表) + I(6) = I(表かつ6)</li>
+            </ul>
+            <p>確率は「掛け算」、情報量は「足し算」になるような関数が必要です。</p>
+          </details>
+
+          <details>
+            <summary>ステップ3: 対数の性質</summary>
+            <p>対数には重要な性質があります：</p>
+            <ul>
+              <li><strong>log(a × b) = log(a) + log(b)</strong></li>
+              <li>これで確率の積→情報量の和に変換できます</li>
+              <li>P(A∧B) = P(A) × P(B) → I(A∧B) = -log(P(A) × P(B)) = -log(P(A)) - log(P(B)) = I(A) + I(B)</li>
+            </ul>
+            <p>だから情報量は <strong>I = -log P</strong> の形になるのです！</p>
+          </details>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🎯 学習の進め方</h3>
+        <ol>
+          <li><strong>対数クイズで基礎確認</strong> - 上記クイズで3問中2問以上正解を目指しましょう</li>
+          <li><strong>定義の理解</strong> - 次のタブで情報量の正式な定義を学習</li>
+          <li><strong>体感的理解</strong> - 「体感」タブで驚きと情報量の関係を実感</li>
+          <li><strong>計算練習</strong> - 「計算例」タブで具体的な計算に慣れる</li>
+          <li><strong>理論の深化</strong> - 加算性、性質を理解</li>
+          <li><strong>応用展開</strong> - 実世界での活用例を知る</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 2. 情報量の定義 -->
+    <section id="tab-def" class="panel" aria-labelledby="2. 情報量の定義">
+      <h2>情報量の定義</h2>
+      <div class="card">
+        <h3>🌟 豊富な直感例</h3>
+        <div class="example-categories">
+          <div class="category">
+            <h4>📰 ニュース・メディア</h4>
+            <ul>
+              <li><strong>ボガートの名言</strong>：「犬が人を噛んでもニュースにならないが、人が犬を噛んだらニュースになる」→ めったに起きないほど情報量が大きい</li>
+              <li><strong>スポーツ</strong>：「王者が勝利」(確率70%) vs 「大番狂わせ」(確率5%) → 後者の方が大きなニュース</li>
+              <li><strong>芸能</strong>：「人気俳優の結婚発表」→ 予想外度が高いほど話題性が大きい</li>
+            </ul>
+          </div>
+
+          <div class="category">
+            <h4>🎲 ゲーム・確率</h4>
+            <ul>
+              <li><strong>コイン投げ</strong>：「表が出た」(50%) より「立った」(0.01%) はまれ → 情報量が大きい</li>
+              <li><strong>サイコロ</strong>：「1が出た」(1/6) より「連続で6回同じ目」(1/6⁶) → 後者は驚異的</li>
+              <li><strong>宝くじ</strong>：「はずれ」は当たり前、「1等当選」は人生を変える情報</li>
+            </ul>
+          </div>
+
+          <div class="category">
+            <h4>🌤️ 日常生活</h4>
+            <ul>
+              <li><strong>天気</strong>：「晴れの日に雨」→ 予報が外れると情報価値が高い</li>
+              <li><strong>交通</strong>：「電車が定刻」は当然、「大幅遅延」は重要情報</li>
+              <li><strong>メール</strong>：「スパム」vs「重要な連絡」→ 受信頻度の逆数が情報量</li>
+            </ul>
+          </div>
+
+          <div class="category">
+            <h4>💡 学習・発見</h4>
+            <ul>
+              <li><strong>試験結果</strong>：「予想通りの点数」vs「予想外の高得点/低得点」</li>
+              <li><strong>科学的発見</strong>：「既知の法則通り」vs「新しい現象の発見」</li>
+              <li><strong>AI予測</strong>：「高確信度の予測」vs「低確信度だが的中」→ 後者の価値が高い</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="key-insight">
+          <h4>🔑 重要な洞察</h4>
+          <p><strong>情報の価値 ≠ 情報量</strong>：受け手にとっての「価値」と、確率にもとづく「情報量」は区別して考える必要があります。情報量は客観的な尺度、価値は主観的な判断です。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>シャノンの定義</h3>
+        <p>事象 <code>a</code> の生起確率を <code>P(a)</code> とすると、情報量 <code>I(a)</code> を</p>
+        <pre class="math">I(a) = - log₂ P(a)</pre>
+        <p>と定義する（単位：bit）。</p>
+        <ul>
+          <li><strong>非負</strong>：<code>0 ≤ P ≤ 1</code> なので <code>I ≥ 0</code></li>
+          <li><strong>単調減少</strong>：めったに起きないほど値が大きい</li>
+          <li><strong>P=1でI=0</strong>：確実な事象は情報量ゼロ</li>
+        </ul>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>I = -log₂ P のグラフ</h3>
+          <canvas id="canvas-logI" width="520" height="340" aria-label="I=-log2(P) graph"></canvas>
+          <div class="note">横軸: P (0&lt;P≤1), 縦軸: I=-log₂P</div>
+          <div class="tool-explanation">
+            <h4>📊 このグラフの見方</h4>
+            <ul>
+              <li><strong>曲線の特徴</strong>：確率が小さいほど情報量が急激に増加</li>
+              <li><strong>重要なポイント</strong>：P=0.5で1bit、P=0.25で2bit、P=0.125で3bit</li>
+              <li><strong>実感のコツ</strong>：確率が半分になるたび情報量が1bit増える</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <h3>比較：y=a<sup>x</sup> / y=x / y=logₐx</h3>
+          <label>底 a を選択:
+            <input id="cmp-base" type="number" min="1.1" step="0.1" value="2">
+          </label>
+          <canvas id="canvas-compare" width="520" height="340" aria-label="Compare exp/linear/log graphs"></canvas>
+          <div class="legend">
+            <span class="chip exp">y = a<sup>x</sup></span>
+            <span class="chip lin">y = x</span>
+            <span class="chip log">y = logₐ x</span>
+          </div>
+          <div class="tool-explanation">
+            <h4>🔧 操作方法</h4>
+            <p><strong>底aを変更</strong>して3つの関数の関係性を比較できます。</p>
+            <ul>
+              <li><strong>指数関数（青）</strong>：急激に増加、情報の「爆発的拡散」</li>
+              <li><strong>一次関数（黄）</strong>：直線的増加、比例関係</li>
+              <li><strong>対数関数（水色）</strong>：緩やかに増加、情報量の「圧縮効果」</li>
+            </ul>
+            <p>a=2のとき、指数と対数は互いに逆関数の関係にあります。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 体感 -->
+    <section id="tab-intuition" class="panel" aria-labelledby="3. 体感">
+      <h2>体感：驚きと情報量の関係</h2>
+
+      <div class="card">
+        <h3>🎲 驚き度体感スライダー</h3>
+        <p><strong>使い方</strong>：①シナリオ選択 → ②出来事選択 → ③あなたの驚き度を設定 → ④理論値と比較！</p>
+
+        <div class="surprise-container">
+          <div class="scenario-setup">
+            <div class="scenario-select">
+              <h4>①シナリオを選択:</h4>
+              <select id="scenario-select">
+                <option value="coin">コイン投げ</option>
+                <option value="dice">サイコロ</option>
+                <option value="lottery">宝くじ</option>
+                <option value="weather">天気予報</option>
+              </select>
+            </div>
+
+            <div class="event-select">
+              <h4>②出来事を選択:</h4>
+              <select id="event-select">
+                <option value="表が出た">表が出た</option>
+                <option value="裏が出た">裏が出た</option>
+                <option value="立った">立った</option>
+                <option value="割れた">割れた</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="scenario-description">
+            <h4 id="scenario-title">コイン投げ</h4>
+            <p><span id="scenario-desc">普通のコインを投げたとき</span><strong id="selected-event">「表が出た」</strong>という結果になった...</p>
+          </div>
+
+          <div class="surprise-input">
+            <div class="surprise-slider">
+              <h4>③この結果にどのくらい驚きますか？</h4>
+              <label for="surprise-level">驚き度（1: 全然驚かない ～ 10: 超驚く）</label>
+              <input type="range" id="surprise-level" min="1" max="10" value="5" step="1">
+              <div class="surprise-value">あなたの驚き度: <span id="surprise-display">5</span></div>
+            </div>
+
+            <div class="probability-guess">
+              <h4>この出来事の確率はどのくらいだと思いますか？</h4>
+              <label for="prob-guess">確率予想（%）</label>
+              <input type="number" id="prob-guess" min="0" max="100" step="0.1" value="50">
+              <button id="reveal-answer">④答えを見る</button>
+            </div>
+          </div>
+
+          <div class="comparison-result">
+            <div class="grid-3">
+              <div class="result-box">
+                <h5>実際の確率</h5>
+                <div class="result-value" id="actual-prob">50%</div>
+              </div>
+              <div class="result-box">
+                <h5>理論的情報量</h5>
+                <div class="result-value" id="theoretical-info">1.00 bit</div>
+              </div>
+              <div class="result-box">
+                <h5>直感の精度</h5>
+                <div class="result-value" id="match-score">80%</div>
+              </div>
+            </div>
+            <div class="explanation" id="intuition-explanation">
+              驚き度5は情報量1.00 bitにほぼ対応しています。良い直感です！
+            </div>
+          </div>
+
+          <div class="usage-tips">
+            <h4>💡 効果的な使い方</h4>
+            <ul>
+              <li><strong>極端な例を試す</strong>：「宝くじ1等当選」vs「コイン表」で驚き度の違いを実感</li>
+              <li><strong>予想してから確認</strong>：確率を予想→驚き度設定→答え確認の順で直感を鍛錬</li>
+              <li><strong>データを蓄積</strong>：「現在の値を記録」でグラフに点をプロット、傾向を可視化</li>
+              <li><strong>対数感覚の訓練</strong>：確率が半分になるたび情報量+1bitの感覚を身につける</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 直感と理論の比較グラフ</h3>
+        <p>あなたの「驚き度」がどれくらい正確か、グラフで可視化して直感を鍛えましょう。</p>
+
+        <div class="tutorial-section">
+          <h4>🎯 使い方チュートリアル</h4>
+          <div class="tutorial-steps">
+            <div class="tutorial-step">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <strong>様々なシナリオを試す</strong><br>
+                コイン、サイコロ、宝くじなど異なる確率の出来事で驚き度を設定
+              </div>
+            </div>
+            <div class="tutorial-step">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <strong>「現在の値を記録」をクリック</strong><br>
+                あなたの驚き度と理論値がグラフ上に点として記録される
+              </div>
+            </div>
+            <div class="tutorial-step">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <strong>パターンを観察</strong><br>
+                点が破線（理想線）に近いほど、あなたの直感が正確
+              </div>
+            </div>
+            <div class="tutorial-step">
+              <div class="step-number">4</div>
+              <div class="step-content">
+                <strong>直感を改善</strong><br>
+                練習を重ねて点が理想線に近づくように調整
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <canvas id="intuition-graph" width="600" height="400" aria-label="Intuition vs Theory comparison"></canvas>
+
+        <div class="graph-controls">
+          <button id="add-data-point">現在の値を記録</button>
+          <button id="clear-data">データクリア</button>
+          <span class="data-count">記録点数: <span id="point-count">0</span></span>
+        </div>
+
+        <div class="graph-interpretation">
+          <h4>📖 グラフの読み方</h4>
+          <div class="interpretation-grid">
+            <div class="interpretation-item good">
+              <div class="pattern-icon">✅</div>
+              <div class="pattern-desc">
+                <strong>理想的パターン</strong><br>
+                点が破線に沿って並ぶ<br>
+                <small>あなたの直感は理論とよく一致</small>
+              </div>
+            </div>
+            <div class="interpretation-item warning">
+              <div class="pattern-icon">⚠️</div>
+              <div class="pattern-desc">
+                <strong>改善が必要</strong><br>
+                点が破線から大きくずれる<br>
+                <small>対数的感覚を練習しましょう</small>
+              </div>
+            </div>
+            <div class="interpretation-item learning">
+              <div class="pattern-icon">📈</div>
+              <div class="pattern-desc">
+                <strong>学習中パターン</strong><br>
+                点が徐々に破線に近づく<br>
+                <small>継続的な改善が見られる</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="practical-tips">
+          <h4>💡 実践のコツ</h4>
+          <ul>
+            <li><strong>極端な例から始める</strong>：確実な事象(驚き1)と宝くじ級(驚き10)で感覚を掴む</li>
+            <li><strong>中間値を意識</strong>：驚き度5-7の範囲で細かく調整練習</li>
+            <li><strong>一貫性を保つ</strong>：同じような確率には同じような驚き度を設定</li>
+            <li><strong>定期的にリセット</strong>：時々データクリアして成長を確認</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🧠 体感のコツ</h3>
+        <ul>
+          <li><strong>珍しさ = 情報量</strong>：めったに起きないほど価値のある情報</li>
+          <li><strong>予想外度 = 驚き</strong>：期待していなかったほど驚く</li>
+          <li><strong>対数的感覚</strong>：確率が1/2→1/4→1/8と半分になるたび、情報量は1bitずつ増加</li>
+          <li><strong>日常の感覚</strong>：「えっ！」「まじで？」「当然でしょ」という感覚が情報量に対応</li>
+        </ul>
+
+        <div class="practice-examples">
+          <h4>練習例</h4>
+          <div class="example-grid">
+            <div class="example-item">
+              <strong>雨が降る</strong><br>
+              確率30% → 1.74 bit<br>
+              「あ、やっぱり」程度の驚き
+            </div>
+            <div class="example-item">
+              <strong>雪が降る（夏）</strong><br>
+              確率0.01% → 13.29 bit<br>
+              「えええ！？」レベルの驚き
+            </div>
+            <div class="example-item">
+              <strong>太陽が昇る</strong><br>
+              確率99.99% → 0.0001 bit<br>
+              全く驚かない
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 計算例 -->
+    <section id="tab-calc" class="panel" aria-labelledby="4. 情報量の計算例">
+      <h2>コイン投げの情報量</h2>
+
+      <div class="card">
+        <h3>確率の入力</h3>
+        <p style="color: #9fb0c3; font-size: 13px; margin: 0 0 6px;">事象定義： a₀ = 表、a₁ = 裏、a₂ = 立つ、a₃ = 割れる</p>
+        <p style="color: #9fb0c3; font-size: 13px; margin: 0 0 10px;">プリセット例（クリックで自動入力）：</p>
+        <div class="scenario-buttons">
+          <button class="scenario" data-scn="fair">通常のコイン</button>
+          <button class="scenario" data-scn="biased">偏ったコイン</button>
+          <button class="scenario" data-scn="trick">イカサマ（両面表）</button>
+          <button class="scenario" data-scn="stand">立つ確率 1/10000</button>
+        </div>
+
+        <div class="grid-4 inputs">
+          <div>
+            <label>P(a₀)</label>
+            <input type="number" id="p0" step="0.00001" min="0" max="1" value="0.5">
+          </div>
+          <div>
+            <label>P(a₁)</label>
+            <input type="number" id="p1" step="0.00001" min="0" max="1" value="0.5">
+          </div>
+          <div>
+            <label>P(a₂)</label>
+            <input type="number" id="p2" step="0.00001" min="0" max="1" value="0">
+          </div>
+          <div>
+            <label>P(a₃)</label>
+            <input type="number" id="p3" step="0.00001" min="0" max="1" value="0">
+          </div>
+        </div>
+
+        <div class="sumline">
+          合計 P = <span id="psum">1.00000</span>
+          <span id="perror" class="error hidden">※ 合計が 1 ではありません</span>
+        </div>
+
+        <div class="grid-4">
+          <div class="ibox">
+            <h4>I(a₀)</h4>
+            <div class="ival" id="i0">—</div>
+            <pre class="steps" id="s0"></pre>
+          </div>
+          <div class="ibox">
+            <h4>I(a₁)</h4>
+            <div class="ival" id="i1">—</div>
+            <pre class="steps" id="s1"></pre>
+          </div>
+          <div class="ibox">
+            <h4>I(a₂)</h4>
+            <div class="ival" id="i2">—</div>
+            <pre class="steps" id="s2"></pre>
+          </div>
+          <div class="ibox">
+            <h4>I(a₃)</h4>
+            <div class="ival" id="i3">—</div>
+            <pre class="steps" id="s3"></pre>
+          </div>
+        </div>
+
+        <div class="tool-explanation">
+          <h4>🧮 計算器の使い方</h4>
+          <ul>
+            <li><strong>確率入力</strong>：各事象の確率を0～1の範囲で設定（合計1になるよう調整）</li>
+            <li><strong>プリセット利用</strong>：「通常のコイン」「偏ったコイン」等のボタンで典型例を素早く設定</li>
+            <li><strong>計算結果</strong>：各ボックスにリアルタイムで情報量が表示、計算過程も確認可能</li>
+            <li><strong>比較分析</strong>：異なる確率での情報量を同時比較し、パターンを理解</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📝 練習問題</h3>
+        <div class="practice-problems">
+          <div class="problem">
+            <h4>問題1: 基本計算</h4>
+            <p>確率 P = 1/8 の事象が起きたとき、情報量 I は何bitか？</p>
+            <details>
+              <summary>答えを見る</summary>
+              <div class="solution">
+                <p><strong>答え: 3 bit</strong></p>
+                <p>I = -log₂(1/8) = -log₂(2⁻³) = -(-3) = 3 bit</p>
+              </div>
+            </details>
+          </div>
+
+          <div class="problem">
+            <h4>問題2: 現実的なシナリオ</h4>
+            <p>天気予報で「明日雨が降る確率70%」と発表された。実際に雨が降った場合と降らなかった場合、それぞれの情報量は？</p>
+            <details>
+              <summary>答えを見る</summary>
+              <div class="solution">
+                <p><strong>雨が降った場合</strong>: I = -log₂(0.7) ≈ 0.51 bit</p>
+                <p><strong>雨が降らなかった場合</strong>: I = -log₂(0.3) ≈ 1.74 bit</p>
+                <p>予想外だった「降らなかった」方が情報量が大きい！</p>
+              </div>
+            </details>
+          </div>
+
+          <div class="problem">
+            <h4>問題3: 情報量の比較</h4>
+            <p>以下の出来事を情報量の大きい順に並べよ：<br>
+            A) 公正なコインで表が出る (P=0.5)<br>
+            B) サイコロで1が出る (P=1/6)<br>
+            C) 年末ジャンボで1等当選 (P≈2×10⁻⁸)</p>
+            <details>
+              <summary>答えを見る</summary>
+              <div class="solution">
+                <p><strong>答え: C > B > A</strong></p>
+                <ul>
+                  <li>A: I = 1.00 bit</li>
+                  <li>B: I ≈ 2.58 bit</li>
+                  <li>C: I ≈ 25.6 bit</li>
+                </ul>
+                <p>宝くじ1等の情報量は圧倒的！</p>
+              </div>
+            </details>
+          </div>
+
+          <div class="problem">
+            <h4>問題4: 実践計算</h4>
+            <p>上記の計算器を使って、以下のシナリオの情報量を求めよ：<br>
+            「偏ったコイン」プリセット → a₂（立つ）の情報量は？</p>
+            <details>
+              <summary>ヒント</summary>
+              <div class="solution">
+                <p>プリセットボタンを押して、P(a₂)の値を確認してから計算しましょう。</p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>補足</h3>
+        <ul>
+          <li><strong>P=0 のとき</strong> <code>log₂ 0</code> は未定義だが、理論上 <strong>I = +∞ bit</strong>（不可能事象が起きた＝モデル破綻）。UIでは「∞ bit」と表示。</li>
+          <li>受け手の主観による「価値」と、確率にもとづく「情報量」は区別して考える。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 3. 加算性 -->
+    <section id="tab-add" class="panel" aria-labelledby="3. 加算性">
+      <h2>加算性：独立事象が同時に起きたときの情報量</h2>
+
+      <div class="card">
+        <h3>なぜ I(a) = -log₂ P(a) なのか</h3>
+        <p>情報量の定義がこの形になる理由の一つは、<strong>加算性を満たす</strong>ためです。</p>
+        <p>独立事象 A, B が同時に起きたとき：</p>
+        <ul>
+          <li>確率は積：P(A∧B) = P(A) × P(B)</li>
+          <li>情報量は和：I(A∧B) = I(A) + I(B)</li>
+        </ul>
+        <p>この性質を同時に満たす関数は、対数関数 <code>-log P</code> の形に限られます（定数倍を除く）。</p>
+        <p>つまり、<strong>「独立な情報の組み合わせは、それぞれの情報量の足し算になる」</strong>という自然な要請から、シャノンの定義が導かれるのです。</p>
+      </div>
+
+      <div class="card">
+        <h3>一般の独立事象 A, B</h3>
+        <div class="grid-2 inputs">
+          <div>
+            <label>P(A)</label>
+            <input type="number" id="pa" min="0" max="1" step="0.0001" value="0.25">
+          </div>
+          <div>
+            <label>P(B)</label>
+            <input type="number" id="pb" min="0" max="1" step="0.0001" value="0.5">
+          </div>
+        </div>
+        <div class="grid-3 add-vals">
+          <div>
+            <div class="label">I(A)</div>
+            <div id="IA" class="ival">—</div>
+          </div>
+          <div>
+            <div class="label">I(B)</div>
+            <div id="IB" class="ival">—</div>
+          </div>
+          <div>
+            <div class="label">I(A∧B)</div>
+            <div id="IAB" class="ival">—</div>
+          </div>
+        </div>
+        <pre class="steps" id="add-steps"></pre>
+      </div>
+
+      <div class="card">
+        <h3>例：マンションの部屋特定</h3>
+        <div class="grid-2 inputs">
+          <div>
+            <label>階数（例: 16）</label>
+            <input type="number" id="floors" min="1" step="1" value="16">
+          </div>
+          <div>
+            <label>各階の部屋数（例: 8）</label>
+            <input type="number" id="perfloor" min="1" step="1" value="8">
+          </div>
+        </div>
+        <div class="grid-3 add-vals">
+          <div>
+            <div class="label">I(階の特定)</div>
+            <div id="Ifloor" class="ival">—</div>
+          </div>
+          <div>
+            <div class="label">I(号室の特定)</div>
+            <div id="Iroom" class="ival">—</div>
+          </div>
+          <div>
+            <div class="label">I(部屋番号の特定)</div>
+            <div id="Itotal" class="ival">—</div>
+          </div>
+        </div>
+        <pre class="steps" id="apt-steps"></pre>
+      </div>
+    </section>
+
+    <!-- 6. 性質 -->
+    <section id="tab-prop" class="panel" aria-labelledby="6. 性質">
+      <h2>情報量が満たすべき性質</h2>
+
+      <div class="card">
+        <h3>🔻 単調減少性（Monotonicity）</h3>
+        <p>確率が大きいほど情報量は小さく、確率が小さいほど情報量は大きい。</p>
+
+        <div class="property-demo">
+          <div class="slider-section">
+            <label>P を動かして確認:
+              <input id="propP" type="range" min="0.0001" max="1" step="0.0001" value="0.5">
+            </label>
+            <div class="current-values">
+              現在 P = <span id="propPval">0.5000</span>, I = <span id="propIval">1.0000</span> bit
+            </div>
+          </div>
+
+          <div class="visual-demo">
+            <canvas id="monotonic-canvas" width="500" height="300" aria-label="Monotonic property visualization"></canvas>
+            <div class="demo-explanation">
+              <p>🔴 <strong>現在の点</strong>：スライダーで動かした確率とその情報量</p>
+              <p>📈 <strong>曲線全体</strong>：右に行くほど（確率↑）情報量は下がる</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="property-examples">
+          <h4>💡 身近な例で理解</h4>
+          <div class="example-grid">
+            <div class="property-example">
+              <strong>確実な事象</strong><br>
+              P = 1.0 → I = 0 bit<br>
+              「太陽が昇る」
+            </div>
+            <div class="property-example">
+              <strong>普通の事象</strong><br>
+              P = 0.5 → I = 1 bit<br>
+              「コインで表」
+            </div>
+            <div class="property-example">
+              <strong>稀な事象</strong><br>
+              P = 0.01 → I = 6.6 bit<br>
+              「100分の1の確率」
+            </div>
+            <div class="property-example">
+              <strong>極稀な事象</strong><br>
+              P = 0.0001 → I = 13.3 bit<br>
+              「宝くじレベル」
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⚡ 連続性（Continuity）</h3>
+        <p>確率が少しだけ変化しても情報量が飛び跳ねない（滑らかに変化する）。</p>
+
+        <div class="continuity-demo">
+          <div class="comparison-inputs">
+            <div class="input-group">
+              <label>P₁ = <input id="p1-input" type="number" min="0.0001" max="1" step="0.0001" value="0.5"></label>
+              <div class="result">I₁ = <span id="i1-result">1.0000</span> bit</div>
+            </div>
+            <div class="input-group">
+              <label>P₂ = <input id="p2-input" type="number" min="0.0001" max="1" step="0.0001" value="0.51"></label>
+              <div class="result">I₂ = <span id="i2-result">0.9710</span> bit</div>
+            </div>
+          </div>
+
+          <div class="difference-display">
+            <div class="diff-item">
+              確率差：|P₂ - P₁| = <span id="p-diff">0.0100</span>
+            </div>
+            <div class="diff-item">
+              情報量差：|I₂ - I₁| = <span id="i-diff">0.0290</span> bit
+            </div>
+            <div class="continuity-status">
+              <span id="continuity-verdict">✅ 連続性が保たれています</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tool-explanation">
+          <h4>🔧 連続性の確認方法</h4>
+          <p>上の計算器で近い確率値を入力してみてください。確率が近ければ情報量も近い値になることが確認できます。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>➕ 加法性（Additivity）</h3>
+        <p>独立事象A, Bについて、I(A∧B) = I(A) + I(B) が成り立つ。</p>
+
+        <div class="additivity-demo">
+          <h4>🎲 実例：サイコロ＋コイン</h4>
+          <div class="scenario-inputs">
+            <div class="scenario-item">
+              <h5>事象A：サイコロで6が出る</h5>
+              <div>P(A) = 1/6 ≈ <span class="prob-value">0.1667</span></div>
+              <div>I(A) = <span class="info-value" id="info-a">2.58</span> bit</div>
+            </div>
+            <div class="scenario-item">
+              <h5>事象B：コインで表が出る</h5>
+              <div>P(B) = 1/2 = <span class="prob-value">0.5000</span></div>
+              <div>I(B) = <span class="info-value" id="info-b">1.00</span> bit</div>
+            </div>
+            <div class="scenario-item combined">
+              <h5>事象A∧B：両方同時に起こる</h5>
+              <div>P(A∧B) = P(A) × P(B) = <span class="prob-value" id="prob-ab">0.0833</span></div>
+              <div>I(A∧B) = <span class="info-value" id="info-ab">3.58</span> bit</div>
+              <div class="verification">
+                検証：I(A) + I(B) = <span id="sum-check">3.58</span> bit ✅
+              </div>
+            </div>
+          </div>
+
+          <div class="custom-additivity">
+            <h4>🔧 カスタム検証</h4>
+            <div class="custom-inputs">
+              <div class="custom-input">
+                <label>P(A) = <input id="custom-pa" type="number" min="0.0001" max="1" step="0.0001" value="0.3"></label>
+                <div>I(A) = <span id="custom-ia">1.74</span> bit</div>
+              </div>
+              <div class="custom-input">
+                <label>P(B) = <input id="custom-pb" type="number" min="0.0001" max="1" step="0.0001" value="0.4"></label>
+                <div>I(B) = <span id="custom-ib">1.32</span> bit</div>
+              </div>
+              <div class="custom-result">
+                <div>P(A∧B) = <span id="custom-pab">0.12</span></div>
+                <div>I(A∧B) = <span id="custom-iab">3.06</span> bit</div>
+                <div>I(A) + I(B) = <span id="custom-sum">3.06</span> bit</div>
+                <div class="match-check">一致度：<span id="additivity-check">100%</span> ✅</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📏 規格化（Normalization）</h3>
+        <p>基準を決めることでスケールが定まる。通常「P=1/2の事象の情報量を1bit」とする。</p>
+
+        <div class="normalization-demo">
+          <h4>🎯 異なる基準での比較</h4>
+          <div class="base-selector">
+            <label>情報量の基準を選択:
+              <select id="norm-base">
+                <option value="2">2進法（bit）：log₂</option>
+                <option value="e">自然対数（nat）：ln</option>
+                <option value="10">10進法（dit）：log₁₀</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="normalization-examples">
+            <div class="norm-example">
+              <h5>P = 1/2 の情報量</h5>
+              <div class="norm-value" id="half-norm">1.000 bit</div>
+            </div>
+            <div class="norm-example">
+              <h5>P = 1/4 の情報量</h5>
+              <div class="norm-value" id="quarter-norm">2.000 bit</div>
+            </div>
+            <div class="norm-example">
+              <h5>P = 1/10 の情報量</h5>
+              <div class="norm-value" id="tenth-norm">3.322 bit</div>
+            </div>
+          </div>
+
+          <div class="normalization-note">
+            <p><strong>重要</strong>：基準が変わっても相対的な関係は保たれます。P=1/4の情報量は常にP=1/2の2倍です。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. エントロピー・応用 -->
+    <section id="tab-applications" class="panel" aria-labelledby="7. エントロピー・応用">
+      <h2>エントロピー・応用：平均情報量と実世界での活用</h2>
+
+      <div class="card">
+        <h3>📊 エントロピー（平均情報量）の定義</h3>
+        <p>情報源 X の <strong>平均的に得られる情報量</strong>（期待値）であり、<strong>分布の不確定さ</strong>の尺度：</p>
+        <pre class="math">H(X) = - Σ P(xᵢ) log₂ P(xᵢ)</pre>
+        <ul>
+          <li>均等分布ほど不確定さが大きい → エントロピーが大きい</li>
+          <li>確実（1つに集中）なら不確定さがない → エントロピー 0</li>
+        </ul>
+
+        <div class="card">
+          <h3>エントロピー計算器（最大4事象）</h3>
+          <div class="grid-4 inputs">
+            <div><label>P(x₁)</label><input type="number" class="hx" step="0.0001" min="0" max="1" value="0.25"></div>
+            <div><label>P(x₂)</label><input type="number" class="hx" step="0.0001" min="0" max="1" value="0.25"></div>
+            <div><label>P(x₃)</label><input type="number" class="hx" step="0.0001" min="0" max="1" value="0.25"></div>
+            <div><label>P(x₄)</label><input type="number" class="hx" step="0.0001" min="0" max="1" value="0.25"></div>
+          </div>
+          <div class="sumline">
+            合計 P = <span id="hsum">1.0000</span>
+            <span id="herr" class="error hidden">※ 合計が 1 ではありません</span>
+          </div>
+          <div class="grid-2">
+            <div class="ibox">
+              <h4>エントロピー H(X)</h4>
+              <div class="ival" id="hval">—</div>
+              <pre class="steps" id="hsteps"></pre>
+            </div>
+            <div class="ibox">
+              <h4>ヒント</h4>
+              <ul>
+                <li>均等：H が最大（例：4事象なら 2 bit）</li>
+                <li>集中：H が小さい（極端には 0）</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="tool-explanation">
+            <h4>⚙️ エントロピー計算器の使い方</h4>
+            <ul>
+              <li><strong>確率分布の設定</strong>：4つまでの事象について確率を設定（合計1）</li>
+              <li><strong>リアルタイム計算</strong>：入力と同時にエントロピーと計算過程を表示</li>
+              <li><strong>分布の比較</strong>：均等分布（0.25, 0.25, 0.25, 0.25）vs 偏った分布（0.7, 0.2, 0.1, 0）で違いを実感</li>
+              <li><strong>応用理解</strong>：データ圧縮や暗号強度の理論的基盤を数値で体感</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>🛡️ エントロピーと攻撃の関係</h3>
+          <p>エントロピー n ビット → 2<sup>n</sup> 通りの可能性 → 平均 2<sup>n-1</sup> 回の試行で破綻</p>
+          <p>例：シーザー暗号（4.7ビット）は26回で、AES-128（128ビット）は宇宙年齢の10²⁰倍の時間が必要。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>💾 データ圧縮の原理</h3>
+        <p>情報量とエントロピーは、データ圧縮の理論的基盤です。</p>
+
+        <div class="application-example">
+          <h4>圧縮の実例：文字の頻度</h4>
+          <div class="compression-demo">
+            <div class="char-frequency">
+              <table>
+                <tr><th>文字</th><th>頻度</th><th>確率</th><th>情報量</th><th>理想符号長</th></tr>
+                <tr><td>E</td><td>127</td><td>12.7%</td><td>2.98 bit</td><td>3 bit</td></tr>
+                <tr><td>T</td><td>91</td><td>9.1%</td><td>3.46 bit</td><td>3-4 bit</td></tr>
+                <tr><td>A</td><td>82</td><td>8.2%</td><td>3.61 bit</td><td>4 bit</td></tr>
+                <tr><td>Z</td><td>1</td><td>0.1%</td><td>9.97 bit</td><td>10 bit</td></tr>
+              </table>
+            </div>
+            <p><strong>原理</strong>：頻出文字ほど短い符号、稀な文字ほど長い符号を割り当てることで、全体の平均符号長を最小化。</p>
+            <p><strong>理論限界</strong>：平均符号長 ≥ エントロピー（シャノンの符号化定理）</p>
+          </div>
+        </div>
+
+        <div class="practical-tools">
+          <h4>身近な圧縮技術</h4>
+          <ul>
+            <li><strong>ZIP, RAR</strong>：LZ系アルゴリズム + ハフマン符号</li>
+            <li><strong>JPEG</strong>：DCT変換 + 量子化 + エントロピー符号化</li>
+            <li><strong>MP3</strong>：心理音響モデル + 適応的量子化</li>
+            <li><strong>現代AI</strong>：Transformer（GPT）も情報量最小化が目標</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🔐 暗号学での情報量</h3>
+        <p>暗号の安全性は、鍵や平文の情報量（エントロピー）で定量評価できます。</p>
+
+        <div class="crypto-examples">
+          <div class="grid-2">
+            <div class="crypto-item">
+              <h4>パスワード強度</h4>
+              <div class="password-entropy">
+                <label>パスワード文字数: <input type="number" id="pwd-length" min="1" max="100" value="8"></label>
+                <label>文字種類数: <input type="number" id="char-types" min="1" max="95" value="62"></label>
+                <div class="result">
+                  エントロピー: <span id="pwd-entropy">47.6 bit</span><br>
+                  推測回数: <span id="guess-count">1.5 × 10¹⁴ 回</span><br>
+                  安全性: <span id="security-level">中程度</span>
+                </div>
+
+                <div class="tool-explanation">
+                  <h4>🔐 パスワード強度計算器の使い方</h4>
+                  <ul>
+                    <li><strong>文字数</strong>：パスワードの長さを設定</li>
+                    <li><strong>文字種類数</strong>：使用可能文字の総数（英大小数字記号=95、英数字=62等）</li>
+                    <li><strong>エントロピー</strong>：情報理論的な強度指標</li>
+                    <li><strong>推測回数</strong>：総当たり攻撃での平均試行回数</li>
+                  </ul>
+                  <p><strong>目安</strong>：40bit未満=弱い、40-60bit=中程度、60-80bit=強い、80bit以上=非常に強い</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="crypto-item">
+              <h4>暗号アルゴリズム比較</h4>
+              <table class="crypto-table">
+                <tr><th>暗号</th><th>鍵長</th><th>安全性</th></tr>
+                <tr><td>DES</td><td>56 bit</td><td>破綻済み</td></tr>
+                <tr><td>AES-128</td><td>128 bit</td><td>安全</td></tr>
+                <tr><td>AES-256</td><td>256 bit</td><td>超安全</td></tr>
+                <tr><td>RSA-2048</td><td>2048 bit</td><td>安全</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="perfect-secrecy">
+          <h4>完全秘匿性（Perfect Secrecy）</h4>
+          <p>シャノンが証明した理想的暗号の条件：</p>
+          <ul>
+            <li><strong>H(平文|暗号文) = H(平文)</strong>：暗号文から平文への情報漏洩ゼロ</li>
+            <li><strong>鍵エントロピー ≥ 平文エントロピー</strong>：十分なランダムネス必要</li>
+            <li><strong>ワンタイムパッド</strong>：この条件を満たす唯一の実用暗号</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🌡️ 物理学のエントロピーとの関係</h3>
+        <p>情報エントロピーと熱力学エントロピーは深い関係があります。</p>
+
+        <div class="physics-connection">
+          <div class="grid-2">
+            <div class="entropy-comparison">
+              <h4>共通点</h4>
+              <ul>
+                <li><strong>不確実性の尺度</strong>：どちらも「乱雑さ」を定量化</li>
+                <li><strong>対数的構造</strong>：S = k log W, H = -Σp log p</li>
+                <li><strong>加法性</strong>：独立系では和で表現</li>
+                <li><strong>最大原理</strong>：自然は最大エントロピー状態に向かう</li>
+              </ul>
+            </div>
+
+            <div class="entropy-differences">
+              <h4>相違点</h4>
+              <ul>
+                <li><strong>対象</strong>：情報 vs 物理系</li>
+                <li><strong>単位</strong>：bit vs J/K</li>
+                <li><strong>可逆性</strong>：可逆 vs 不可逆過程</li>
+                <li><strong>観測者</strong>：主観的 vs 客観的</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="maxwell-demon">
+            <h4>マクスウェルの悪魔</h4>
+            <p>情報と物理エントロピーの関係を示す思考実験：</p>
+            <ol>
+              <li>悪魔が分子の運動を「観測」して仕分け</li>
+              <li>観測で「情報」を得る → エントロピー減少？</li>
+              <li>実際は観測に必要なエネルギーがエントロピー増加</li>
+              <li><strong>結論</strong>：情報消去には物理的コストが必要</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🤖 機械学習・AI での活用</h3>
+        <p>現代AIの多くの技術で情報量が中心的役割を果たしています。</p>
+
+        <div class="ml-applications">
+          <div class="application-grid">
+            <div class="ml-item">
+              <h4>決定木の分岐基準</h4>
+              <p><strong>情報利得</strong> = H(全体) - H(分割後)</p>
+              <p>最も不確実性を減らす特徴量で分岐</p>
+            </div>
+
+            <div class="ml-item">
+              <h4>言語モデル（GPT等）</h4>
+              <p><strong>クロスエントロピー損失</strong>で学習</p>
+              <p>次の単語の確率分布を最適化</p>
+            </div>
+
+            <div class="ml-item">
+              <h4>変分オートエンコーダー</h4>
+              <p><strong>KLダイバージェンス</strong>で正則化</p>
+              <p>情報のボトルネック効果を利用</p>
+            </div>
+
+            <div class="ml-item">
+              <h4>強化学習</h4>
+              <p><strong>エントロピー正則化</strong>で探索促進</p>
+              <p>不確実性を保つことで局所解回避</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="information-bottleneck">
+          <h4>情報ボトルネック理論</h4>
+          <p>深層学習の動作原理を情報理論で説明：</p>
+          <ul>
+            <li><strong>圧縮段階</strong>：I(X;T)を最小化（入力の冗長性除去）</li>
+            <li><strong>汎化段階</strong>：I(T;Y)を最大化（出力との相関強化）</li>
+            <li><strong>最適解</strong>：圧縮と予測のトレードオフ</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🔬 その他の応用分野</h3>
+
+        <div class="other-fields">
+          <div class="field-item">
+            <h4>🧬 生物学・遺伝学</h4>
+            <ul>
+              <li>DNA配列の情報量解析</li>
+              <li>タンパク質構造の予測</li>
+              <li>進化の情報理論的モデル</li>
+            </ul>
+          </div>
+
+          <div class="field-item">
+            <h4>📊 統計学・データサイエンス</h4>
+            <ul>
+              <li>相互情報量による特徴選択</li>
+              <li>異常検知アルゴリズム</li>
+              <li>因果推論の情報理論的手法</li>
+            </ul>
+          </div>
+
+          <div class="field-item">
+            <h4>📡 通信工学</h4>
+            <ul>
+              <li>チャネル容量の計算</li>
+              <li>誤り訂正符号の設計</li>
+              <li>5G/6Gの効率化技術</li>
+            </ul>
+          </div>
+
+          <div class="field-item">
+            <h4>🧠 認知科学・心理学</h4>
+            <ul>
+              <li>人間の情報処理能力測定</li>
+              <li>学習効率の最適化</li>
+              <li>意思決定の情報理論的分析</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer">
+      🔗 GitHubリポジトリはこちら（ <a href="https://github.com/ipusiron/infoquantity-academy" target="_blank">ipusiron/infoquantity-academy</a> ）
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
