@@ -26,12 +26,14 @@ infoquantity-academy/
 
 The application is a single-page application (SPA) with a tab-based interface:
 
-- **index.html**: Main HTML structure with 5 tabbed sections (Definition, Calculation Examples, Additivity, Properties, Entropy)
+- **index.html**: Main HTML structure with 7 tabbed sections (基礎知識, 情報量の定義, 体感, 計算例, 加算性, 性質, エントロピー・応用)
 - **script.js**: All JavaScript logic including:
   - Tab navigation control
   - Canvas-based graph rendering (using 2D context)
   - Real-time calculation of information quantity based on probability inputs
   - Interactive demonstrations of information theory concepts
+  - Quiz system for the basics tab
+  - Surprise/intuition slider for experiential learning
 - **style.css**: Modern CSS styling with custom properties for theming
 
 Key architectural patterns:
@@ -59,7 +61,7 @@ For GitHub Pages deployment (already configured):
 ## Testing Approach
 
 Manual testing in browser - no automated test framework configured. When making changes:
-1. Test all 5 tabs for functionality
+1. Test all 7 tabs for functionality
 2. Verify calculations with known values (e.g., P=0.5 → I=1 bit)
 3. Check responsive design at different viewport sizes
 4. Test interactive elements (sliders, inputs, buttons)

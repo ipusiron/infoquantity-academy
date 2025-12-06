@@ -1,11 +1,36 @@
 <!--
 ---
-title: InfoQuantity Academy
-category: information-theory
-difficulty: 1
-description: A beginner-friendly interactive web tool to grasp information quantity with definitions, worked examples, additivity, properties, and entropy.
-tags: [information-theory, information-quantity, shannon, entropy, education, visualization, javascript]
-demo: https://ipusiron.github.io/infoquantity-academy/
+id: day073
+slug: infoquantity-academy
+
+title: "InfoQuantity Academy"
+
+subtitle_ja: "情報量の基礎学習ツール"
+subtitle_en: "Interactive Information Theory Learning Tool"
+
+description_ja: "コンピューターサイエンスや数学に不慣れでも、情報量 I(a)=-log₂P(a) の直感と定義・性質を対話的に学べる入門ツール。対数クイズ、驚き度体感スライダー、計算例、加算性、エントロピーまで段階的に学習。"
+description_en: "A beginner-friendly interactive web tool to grasp information quantity with definitions, worked examples, additivity, properties, and entropy. Learn Shannon's information theory through quizzes, intuition sliders, and interactive calculators."
+
+category_ja:
+  - 情報理論
+category_en:
+  - Information Theory
+
+difficulty: 3
+
+tags:
+  - information-theory
+  - information-quantity
+  - shannon
+  - entropy
+  - education
+  - visualization
+  - javascript
+
+repo_url: "https://github.com/ipusiron/infoquantity-academy"
+demo_url: "https://ipusiron.github.io/infoquantity-academy/"
+
+hub: true
 ---
 -->
 
@@ -19,7 +44,7 @@ demo: https://ipusiron.github.io/infoquantity-academy/
 
 **Day073 - 生成AIで作るセキュリティツール100**
 
-**InfoQuantity Academy**は、コンピューターサイエンスや数学に不慣れでも、**「情報量」(information quantity)** の直感と定義・性質を対話的に学べる入門ツールです。
+**InfoQuantity Academy**は、コンピューターサイエンスや数学に不慣れでも、**「情報量」(information quantity)** の定義と性質を対話的に学べる入門ツールです。
 
 - **「めったに起きない＝大きな情報量」**
 - **確率から情報を定量化する、シャノンの情報理論をインタラクティブに体験**
