@@ -68,6 +68,14 @@ Compare the information associated with a predicted probability of 25% and a mod
 
 Explore the relationship between probability and information. Images are 1280×900px.
 
+![Comparing contributions in biased and uniform distributions](assets/en/screenshot4.png)
+
+> *Inspect each term’s contribution and the entropy difference between distributions A and B.*
+
+![Record table with export and import controls](assets/en/screenshot5.png)
+
+> *Zero-probability records retain ∞. Delete individual records or save them as CSV or JSON.*
+
 ## 🎯 Purpose and features
 
 - Learn I(a) = −log₂P(a) through logarithm quizzes and graphs
@@ -75,6 +83,8 @@ Explore the relationship between probability and information. Images are 1280×9
 - Record subjective surprise from 1 to 10 (up to 100 records, without scoring)
 - Explore additivity for independent events, monotonicity, continuity, and normalization
 - Calculate average information H(X) for distributions of up to 4 events
+- Inspect individual contributions with 4 presets and compare the entropies of 2 distributions
+- Delete individual records, export CSV, save JSON, and import after confirmation
 - Calculate candidate counts and average guesses for uniformly random strings
 - Switch between Japanese and English and light and dark themes
 
@@ -97,6 +107,41 @@ The initial language is selected from the URL's lang=ja/en parameter, saved pref
 Switching languages preserves inputs, records, and quiz answers. Only theme and language are saved in localStorage; inputs and learning records are not saved. Reloading clears the records. “Clear records” clears the Experience records, while “Reset” clears quiz answers.
 
 Use Tab to focus the tab bar, then the left/right arrows, Home, or End to switch tabs.
+
+### Distribution contributions and comparison
+
+In the Entropy & applications calculator, enter four probabilities for each of distributions A and B. You can also load the Uniform, Biased, One certain outcome, or Two equal outcomes preset. Each table shows probability P, information I, and the contribution P×I to entropy. Bar lengths represent contributions.
+
+The maximum is log₂4=2 bit, based on four outcomes including zero-probability ones. At probability 0, information is displayed as ∞ and the contribution as 0. H(B)−H(A) is a difference in average information, not a distance between distributions. Different distributions can have the same entropy. Invalid input hides the affected contribution table and the comparison result.
+
+### Saving and resuming records
+
+The Experience record table shows the event, subjective surprise, predicted probability, model probability, and both information values. You can delete individual rows. On narrow screens, scroll horizontally within the table’s container, which can also receive keyboard focus.
+
+1. Choose “Export CSV” for analysis or “Save JSON” to resume later.
+2. To resume, use “Choose JSON” to select a file saved by this tool.
+3. Check the record count and replacement warning. Save your current records as JSON first if needed.
+4. Select “Replace with the checked records.” Selecting a file alone does not change your records; you can cancel.
+
+Import replaces all records rather than appending. Adding, deleting, or clearing records while a file is being read or awaiting confirmation cancels the import. Switching languages preserves pending confirmation. Files are processed in the browser and are not sent to a server.
+
+### Saved file format
+
+CSV downloads use the name `infoquantity-records.csv` and the columns `event_id,surprise,predicted_probability,model_probability,predicted_information_bits,model_information_bits`. Probabilities range from 0 to 1, information is in bits, and infinity is written as `Infinity`. Predicted and model probabilities occupy separate columns. Events use fixed IDs. CSV import is not supported.
+
+JSON downloads use the name `infoquantity-records.json`. Files are UTF-8, limited to 64 KiB (65536 bytes) and 100 records. The format name, version, fields, and values are validated. Unknown fields or event IDs, numbers encoded as strings, and probabilities inconsistent with the teaching model are rejected. Surprise is an integer from 1 to 10. Information is not saved; it is recalculated from probabilities on import. Invalid files leave current records unchanged. Empty record sets are accepted, but confirming replacement leaves you with 0 records.
+
+```json
+{
+  "format": "infoquantity-academy-records",
+  "version": 1,
+  "records": [
+    { "event": "seven", "surprise": 5, "predicted": 0, "probability": 0 }
+  ]
+}
+```
+
+Here, `seven` is the teaching event “Rolls a 7” for a fair six-sided die. Both predicted and model information become ∞. Successful JSON import does not prove that the records are authentic or have not been altered.
 
 ## 👥 Intended users
 
@@ -150,6 +195,17 @@ In entropy H(X)=−ΣP(x)log₂P(x), a probability-zero term contributes 0 by it
 | Distribution (1, 0, 0, 0) | H=0 bit |
 | 16 floors × 8 rooms, all equally likely | 4+3=7 bit |
 | 26 equally likely candidates, guessed without repetition | Average 13.5 guesses |
+
+Comparison presets are shown to six decimal places, matching the interface.
+
+| Example ID | Probability distribution | H [bit] |
+|---|---|---|
+| uniform | (0.25, 0.25, 0.25, 0.25) | 2.000000 |
+| biased | (0.7, 0.2, 0.1, 0) | 1.156780 |
+| certain | (1, 0, 0, 0) | 0.000000 |
+| binary | (0.5, 0.5, 0, 0) | 1.000000 |
+
+With A set to biased and B to uniform, H(B)−H(A)=0.843220 bit. The difference is calculated from unrounded values.
 
 ## ⚙️ Input and display rules
 
@@ -241,42 +297,53 @@ npm test
 
 Tests cover reference calculations, boundary cases, input validation, bilingual dictionaries, documentation correspondence, and UI safety. GitHub Actions runs them with Node.js 22 on push and pull_request.
 
+Tests also cover known distribution comparisons, JSON round trips, size and count limits, rejection of invalid values, CSV columns and infinity, and the import confirmation path. CSV is generated from allowlisted fixed IDs and validated numbers; imported strings are never inserted as HTML.
+
 The app does not send inputs externally or load external scripts or CDNs. Its CSP restricts inline scripts, dynamic evaluation, and network connections, while dynamic text uses textContent. Opening an external link accesses that destination.
 
 ## 📁 Directory structure
 
 ```text
-infoquantity-academy/
-├── .github/
-│   └── workflows/
-│       └── test.yml          # Node.js 22 tests
-├── assets/
-│   ├── en/
-│   │   ├── screenshot.png    # English: examples
-│   │   ├── screenshot2.png   # English: experience
-│   │   └── screenshot3.png   # English: dark theme
-│   ├── screenshot.png        # Japanese: examples
-│   ├── screenshot2.png       # Japanese: experience
-│   └── screenshot3.png       # Japanese: dark theme
-├── test/
-│   ├── core.test.js          # Calculations and boundary cases
-│   ├── readme.test.js        # Bilingual docs and static translations
-│   └── ui-contract.test.js   # UI, dictionaries and CSP
-├── .gitignore                # Git exclusions
-├── .nojekyll                 # Disable Jekyll processing
-├── CLAUDE.md                 # Development rules
-├── LICENSE                   # MIT license
-├── README.md                 # Japanese documentation
-├── README.en.md              # English documentation
-├── core.js                   # DOM-independent calculations
-├── i18n.js                   # Static translation and language switching
-├── index.html                # Seven-tab interface and lessons
-├── lesson-en.js              # English lesson text
-├── messages.js               # Japanese/English dynamic messages
-├── package.json              # Dependency-free test setup
-├── script.js                 # UI updates and graphs
-├── settings.js               # Initial language and theme
-└── style.css                 # Responsive styling
+infoquantity-academy/        # Project root
+├── .github/                 # GitHub configuration
+│   └── workflows/           # Automated test definitions
+│       └── test.yml         # Node.js 22 tests
+├── assets/                  # Japanese screenshots
+│   ├── en/                  # English screenshots
+│   │   ├── screenshot.png   # English: examples
+│   │   ├── screenshot2.png  # English: experience
+│   │   ├── screenshot3.png  # English: dark theme
+│   │   ├── screenshot4.png  # English: distribution comparison
+│   │   └── screenshot5.png  # English: saving records
+│   ├── screenshot.png       # Japanese: examples
+│   ├── screenshot2.png      # Japanese: experience
+│   ├── screenshot3.png      # Japanese: dark theme
+│   ├── screenshot4.png      # Japanese: distribution comparison
+│   └── screenshot5.png      # Japanese: saving records
+├── test/                    # Node.js built-in tests
+│   ├── core.test.js         # Calculations and boundary cases
+│   ├── learning.test.js     # Distribution comparison and record formats
+│   ├── learning-ui.test.js  # Safe interchange and UI contracts
+│   ├── readme.test.js       # Bilingual docs and static translations
+│   └── ui-contract.test.js  # UI, dictionaries and CSP
+├── .gitignore               # Git exclusions
+├── .nojekyll                # Disable Jekyll processing
+├── CLAUDE.md                # Development rules
+├── LICENSE                  # MIT license
+├── README.md                # Japanese documentation
+├── README.en.md             # English documentation
+├── core.js                  # DOM-independent calculations
+├── i18n.js                  # Static translation and language switching
+├── index.html               # Seven-tab interface and lessons
+├── learning-core.js         # Distribution comparison, records and teaching models
+├── learning-ui.js           # Distribution inputs and contribution tables
+├── lesson-en.js             # English lesson text
+├── messages.js              # Japanese/English dynamic messages
+├── package.json             # Dependency-free test setup
+├── records-ui.js            # CSV/JSON and confirmed import
+├── script.js                # UI updates and graphs
+├── settings.js              # Initial language and theme
+└── style.css                # Responsive styling
 ```
 
 ## 💻 Requirements

@@ -362,7 +362,12 @@
 
         <canvas id="intuition-graph" width="600" height="400" aria-label="Intuition vs Theory comparison"></canvas>
         <p id="record-note" role="status"></p>
-        <ol id="record-list" aria-label="記録した出来事"></ol>
+        <div class="records-scroll" tabindex="0" role="region" aria-label="記録した出来事">
+          <table class="learning-table records-table">
+            <thead id="record-head"></thead><tbody id="record-list"></tbody>
+          </table>
+        </div>
+        <div id="record-tools"></div>
 
         <div class="graph-controls">
           <button id="add-data-point">現在の値を記録</button>
@@ -853,6 +858,7 @@
 
         <div class="card">
           <h3>エントロピー計算器（最大4事象）</h3>
+          <div id="entropy-presets"></div>
           <div class="grid-4 inputs">
             <div><label>P(x₁)</label><input type="number" class="hx" step="0.0001" min="0" max="1" value="0.25"></div>
             <div><label>P(x₂)</label><input type="number" class="hx" step="0.0001" min="0" max="1" value="0.25"></div>
@@ -878,6 +884,7 @@
             </div>
           </div>
 
+          <div id="entropy-learning"></div>
           <div class="tool-explanation">
             <h4>⚙️ エントロピー計算器の使い方</h4>
             <ul>
@@ -1117,9 +1124,12 @@
   </footer>
 
   <script src="core.js"></script>
+  <script src="learning-core.js"></script>
   <script src="messages.js"></script>
   <script src="lesson-en.js"></script>
   <script src="i18n.js"></script>
   <script src="script.js"></script>
+  <script src="learning-ui.js"></script>
+  <script src="records-ui.js"></script>
 </body>
 </html>

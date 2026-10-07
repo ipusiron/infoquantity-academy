@@ -401,12 +401,7 @@ document.getElementById('quiz-reset').addEventListener('click', () => {
 /* ========= 新機能: 体感タブの驚き度システム ========= */
 
 // Each entry is an individual event, not necessarily a disjoint exhaustive distribution.
-const scenarios = {
-  coin: { heads: .5, tails: .5, edge: .0001, broken: .00001 },
-  dice: { one: 1/6, even: .5, seven: 0, sixOnes: 1/46656 },
-  lottery: { lose: .999, smallWin: .0009, jackpot: .00000001, rareWin: .0000000001 },
-  weather: { sun: .4, rain: .3, snow: .0001, rareWeather: .0000000001 }
-};
+const scenarios = InfoLearning.SCENARIOS;
 let currentEvent = { probability: .5, name: 'heads' };
 let intuitionData = [];
 function refreshScenario(reset = false) {
@@ -492,22 +487,41 @@ document.getElementById('add-data-point').addEventListener('click', function () 
   intuitionData.push({ surprise: Number(document.getElementById('surprise-level').value),
     theoretical: C.information(currentEvent.probability), event: currentEvent.name,
     predicted: percent / 100, probability: currentEvent.probability });
-  renderRecords(); updateIntuitionDisplay(); drawIntuitionGraph();
+  recordsChanged();
 });
 document.getElementById('clear-data').addEventListener('click', () => {
   intuitionData = [];
-  renderRecords(); updateIntuitionDisplay(); drawIntuitionGraph();
+  recordsChanged();
 });
+function recordsChanged() {
+  renderRecords(); updateIntuitionDisplay(); drawIntuitionGraph();
+  document.dispatchEvent(new Event('recordschange'));
+}
 function renderRecords() {
   document.getElementById('point-count').textContent = intuitionData.length;
   const list = document.getElementById('record-list');
   list.replaceChildren();
-  intuitionData.forEach(point => {
-    const item = document.createElement('li');
-    item.textContent = t(point.event) + ' / ' + t('surprise') + ': ' + point.surprise +
-      ' / ' + t('guess') + ': ' + (point.predicted * 100).toPrecision(6) + '%' +
-      ' / ' + t('setting') + ': ' + (point.probability * 100).toPrecision(6) + '%' +
-      ' / I: ' + bit(point.theoretical);
+  const head = document.getElementById('record-head'); head.replaceChildren();
+  const header = document.createElement('tr');
+  for (const key of ['event', 'surprise', 'guess', 'setting', 'predictedBits', 'information', 'removeRecord']) {
+    const cell = document.createElement('th'); cell.scope = 'col'; cell.textContent = t(key); header.append(cell);
+  }
+  head.append(header);
+  intuitionData.forEach((point, index) => {
+    const item = document.createElement('tr');
+    for (const value of [t(point.event), point.surprise, (point.predicted * 100).toPrecision(6) + '%',
+      (point.probability * 100).toPrecision(6) + '%', bit(C.information(point.predicted)), bit(point.theoretical)]) {
+      const cell = document.createElement('td'); cell.textContent = value; item.append(cell);
+    }
+    const actions = document.createElement('td'), remove = document.createElement('button');
+    remove.type = 'button'; remove.textContent = t('removeRecord');
+    remove.setAttribute('aria-label', t('removeRecordLabel', { n: index + 1, event: t(point.event) }));
+    remove.addEventListener('click', () => {
+      intuitionData.splice(index, 1); recordsChanged();
+      const buttons = document.querySelectorAll('#record-list button');
+      (buttons[Math.min(index, buttons.length - 1)] || document.getElementById('add-data-point')).focus();
+    });
+    actions.append(remove); item.append(actions);
     list.appendChild(item);
   });
 }
