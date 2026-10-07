@@ -8,6 +8,9 @@ InfoQuantity Academy is a dependency-free static educational app for information
 
 - index.html: Japanese lesson source and accessible interface.
 - core.js: DOM-independent validated calculations, exposed as InfoCore in the browser and CommonJS in Node.
+- learning-core.js: four-outcome summaries, presets, shared event models, bounded JSON and CSV codecs (InfoLearning/CommonJS).
+- learning-ui.js: entropy contribution tables and signed two-distribution comparison.
+- records-ui.js: local downloads, validated import preview and explicit replacement; stale reads are invalidated.
 - script.js: event handling, calculators, quiz, records and responsive Canvas drawing.
 - messages.js: corresponding Japanese/English keys and interpolation placeholders for dynamic text.
 - lesson-en.js: English translations keyed by normalized Japanese source text.
@@ -28,6 +31,10 @@ Do not add dependencies, CDNs, inline scripts, eval, or HTML interpolation. Pres
 - Independent joint information uses the sum of logarithms to avoid probability-product underflow.
 - Subjective surprise is recorded, never scored against an ideal line. Compare predicted and assigned probabilities instead.
 - Keep infinite records explicit in the list; plot only finite points. Limit records to 100.
+- Entropy maximum uses four outcomes, including zero-probability slots: log2(4)=2 bit. Entropy difference is not a distance.
+- JSON version 1 stores only event, surprise, predicted and probability; recompute information. Reject unknown fields and IDs.
+- Import is limited to 65536 UTF-8 bytes and 100 records, validates the teaching probabilities, and requires explicit replacement.
+- Do not discard current records on invalid input, cancellation or stale asynchronous completion. Record mutations cancel pending imports.
 - Entropy is not semantic importance or a security certificate.
 - Average guesses (N+1)/2 assumes N equally likely candidates, no repeated guesses, and a recognizable correct answer.
 - Do not infer attack time, cryptographic strength or quantum resistance from entropy alone.
@@ -43,6 +50,7 @@ Also verify file://, all seven tabs, both languages and themes, narrow/wide scre
 Use known expected values rather than calculating expectations with the function under test.
 Changes to Japanese lesson text must update lesson-en.js in the same change.
 Capture real browser screenshots after UI changes; inspect them and keep each PNG below 300 KB.
+Keep five screenshots per language (1280x900): examples, experience, dark definition, distribution comparison and saved records.
 Update both README files together, including numbers, assumptions, links and the directory tree.
 
 ## Publication

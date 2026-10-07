@@ -30,7 +30,7 @@ test('README relative links and bilingual screenshots exist and PNGs are bounded
       assert.ok(fs.existsSync(path.join(root, href)), name + ': ' + href);
     }
     const shots = links.filter(h => h.endsWith('.png'));
-    assert.equal(shots.length, 3);
+    assert.equal(shots.length, 5);
     for (const shot of shots) {
       const data = fs.readFileSync(path.join(root, shot));
       assert.ok(data.length < 300000, shot);
@@ -40,6 +40,59 @@ test('README relative links and bilingual screenshots exist and PNGs are bounded
   }
   assert.ok(ja.includes('[English](README.en.md)'));
   assert.ok(en.includes('[日本語](README.md)'));
+});
+
+test('README distribution examples and JSON recipes are executable and bilingual', () => {
+  const L = require('../learning-core.js');
+  const recipes = [];
+  for (const source of [ja, en]) {
+    const rows = [...source.matchAll(/^\| (uniform|biased|certain|binary) \| \(([^)]+)\) \| ([\d.]+) \|$/gm)];
+    assert.equal(rows.length, 4);
+    for (const [, id, values, expected] of rows) {
+      const ps = values.split(',').map(Number);
+      assert.deepEqual(ps, [...L.PRESETS[id]]);
+      assert.equal(L.summarize(ps).entropy.toFixed(6), expected);
+    }
+    const value = L.compareDistributions(L.PRESETS.biased, L.PRESETS.uniform).difference.toFixed(6);
+    assert.ok(source.includes(`H(B)−H(A)=${value} bit`));
+    const blocks = [...source.matchAll(/```json\n([\s\S]*?)\n```/g)];
+    assert.equal(blocks.length, 1);
+    const parsed = L.parseRecords(blocks[0][1]);
+    assert.equal(parsed.records.length, 1);
+    assert.equal(parsed.records[0].theoretical, Infinity);
+    assert.equal(L.csvRecords(parsed.records).text.split('\r\n')[1], 'seven,5,0,0,Infinity,Infinity');
+    recipes.push(parsed);
+    assert.ok(source.includes(String(L.MAX_BYTES)));
+    assert.ok(source.includes('infoquantity-records.csv') && source.includes('infoquantity-records.json'));
+  }
+  assert.deepEqual(recipes[0], recipes[1]);
+});
+
+test('README trees document every tracked file and directory with a comment', () => {
+  const tracked = require('node:child_process').execFileSync('git', ['ls-files'], { cwd: root, encoding: 'utf8' }).trim().split('\n');
+  for (const source of [ja, en]) {
+    const tree = source.match(/```text\n(infoquantity-academy\/[\s\S]*?)\n```/)[1].split('\n');
+    const listed = new Set(), stack = [];
+    for (const line of tree) {
+      assert.match(line, / # \S/);
+      assert.equal(line.indexOf('#'), 29);
+      const entry = line.split(' # ')[0].trimEnd();
+      const branch = entry.search(/[├└]/);
+      if (branch === -1) continue;
+      const depth = branch / 4, name = entry.slice(branch + 4);
+      stack.length = depth;
+      const file = [...stack, name].join('/');
+      assert.ok(fs.existsSync(path.join(root, file)), file);
+      listed.add(file);
+      if (name.endsWith('/')) stack.push(name.slice(0, -1));
+    }
+    for (const file of tracked) assert.ok(listed.has(file), file);
+    for (const directory of ['.github/', '.github/workflows/', 'assets/', 'assets/en/', 'test/']) assert.ok(listed.has(directory), directory);
+    const shots = [...source.matchAll(/!\[[^\]]*\]\((assets\/[^)]+\.png)\)/g)].map(m => m[1]);
+    const folder = source === ja ? 'assets' : 'assets/en';
+    assert.deepEqual(fs.readdirSync(path.join(root, folder)).filter(f => f.endsWith('.png')).sort(),
+      shots.map(s => path.basename(s)).sort());
+  }
 });
 
 test('README numeric examples agree with independent expected values', () => {
