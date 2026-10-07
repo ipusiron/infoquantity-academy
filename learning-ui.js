@@ -12,7 +12,8 @@
   const root = document.getElementById('entropy-learning');
   const aOutput = node('div'); aOutput.id = 'entropy-a-details';
   const bSection = node('section', undefined, 'distribution-b');
-  const bHeading = node('h4');
+  const bHeading = node('h4'); bHeading.id = 'distribution-b-heading';
+  bSection.setAttribute('aria-labelledby', bHeading.id);
   const bPresets = node('div');
   const bFields = node('div', undefined, 'grid-4 inputs');
   const bInputs = L.PRESETS.biased.map((p, index) => {
@@ -27,7 +28,9 @@
   const difference = node('p'); difference.id = 'entropy-difference'; difference.setAttribute('role', 'status');
   const explanation = node('p', undefined, 'note');
   bSection.append(bHeading, bPresets, bFields, bOutput);
-  root.append(aOutput, bSection, difference, explanation);
+  const comparisons = node('div', undefined, 'learning-comparison');
+  comparisons.append(aOutput, bSection);
+  root.append(comparisons, difference, explanation);
   function presets(container, inputs, name, original) {
     container.replaceChildren(); container.className = 'learning-actions';
     container.setAttribute('role', 'group'); container.setAttribute('aria-label', t('presetLabel', { name }));

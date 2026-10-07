@@ -9,8 +9,12 @@
     actions.append(button); return button;
   };
   const csv = makeButton('export-csv'), json = makeButton('export-json');
-  const fileLabel = document.createElement('label'); fileLabel.htmlFor = 'import-json';
+  const fileLabel = document.createElement('button'); fileLabel.type = 'button';
+  fileLabel.id = 'choose-json'; fileLabel.className = 'record-file-button';
+  fileLabel.setAttribute('aria-controls', 'import-json');
   const file = document.createElement('input'); file.type = 'file'; file.id = 'import-json'; file.accept = '.json,application/json';
+  file.hidden = true;
+  fileLabel.addEventListener('click', () => { file.value = ''; file.click(); });
   const status = document.createElement('p'); status.id = 'import-status'; status.setAttribute('role', 'status');
   const confirmation = document.createElement('div'); confirmation.className = 'learning-actions';
   const apply = document.createElement('button'), cancel = document.createElement('button');
@@ -61,9 +65,9 @@
   apply.addEventListener('click', () => {
     if (!pending) return;
     const accepted = pending; reset(); intuitionData = accepted; recordsChanged();
-    message = 'recordApplied'; args = { n: accepted.length }; render(); file.focus();
+    message = 'recordApplied'; args = { n: accepted.length }; render(); fileLabel.focus();
   });
-  cancel.addEventListener('click', () => { reset(); message = 'recordCancelled'; render(); file.focus(); });
+  cancel.addEventListener('click', () => { reset(); message = 'recordCancelled'; render(); fileLabel.focus(); });
   document.addEventListener('recordschange', reset);
   document.addEventListener('languagechange', render);
   render();
