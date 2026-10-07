@@ -1,77 +1,52 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Project
 
-## Project Overview
-
-InfoQuantity Academy is an interactive educational web tool for learning information theory concepts, specifically focusing on information quantity (I = -log₂ P) and entropy. It's a pure client-side JavaScript application using vanilla JS, HTML5 Canvas for visualizations, and CSS for styling.
-
-## Directory Structure
-
-```
-infoquantity-academy/
-├── index.html          # Main HTML file with tab-based interface
-├── script.js           # JavaScript logic with comprehensive developer comments
-├── style.css          # CSS with theme system and developer comments
-├── README.md          # Comprehensive documentation and theory explanations
-├── CLAUDE.md          # Development guidance (this file)
-├── LICENSE            # MIT License
-├── .gitignore         # Git ignore rules
-├── .nojekyll          # GitHub Pages configuration
-└── .claude/           # Claude Code settings
-    └── settings.local.json
-```
+InfoQuantity Academy is a dependency-free static educational app for information theory. Preserve all seven tabs and both Japanese and English. It runs on GitHub Pages, a local HTTP server, and directly via file://.
 
 ## Architecture
 
-The application is a single-page application (SPA) with a tab-based interface:
+- index.html: Japanese lesson source and accessible interface.
+- core.js: DOM-independent validated calculations, exposed as InfoCore in the browser and CommonJS in Node.
+- script.js: event handling, calculators, quiz, records and responsive Canvas drawing.
+- messages.js: corresponding Japanese/English keys and interpolation placeholders for dynamic text.
+- lesson-en.js: English translations keyed by normalized Japanese source text.
+- i18n.js: safe text-node translation and language switching without replacing form controls.
+- settings.js: language and theme initialization before CSS; storage failures are nonfatal.
+- style.css: mobile-first layout, light/dark themes, focus and reduced-motion handling.
+- test/: Node built-in tests; .github/workflows/test.yml runs them with Node.js 22.
+- README.md / README.en.md: matching documentation; assets/ and assets/en/ contain real screenshots.
 
-- **index.html**: Main HTML structure with 7 tabbed sections (基礎知識, 情報量の定義, 体感, 計算例, 加算性, 性質, エントロピー・応用)
-- **script.js**: All JavaScript logic including:
-  - Tab navigation control
-  - Canvas-based graph rendering (using 2D context)
-  - Real-time calculation of information quantity based on probability inputs
-  - Interactive demonstrations of information theory concepts
-  - Quiz system for the basics tab
-  - Surprise/intuition slider for experiential learning
-- **style.css**: Modern CSS styling with custom properties for theming
+Do not add dependencies, CDNs, inline scripts, eval, or HTML interpolation. Preserve the strict CSP and file:// operation. Update dynamic output on every input, preset, clear, language and theme change that affects it.
 
-Key architectural patterns:
-- Event-driven UI updates triggered by user inputs
-- Mathematical calculations use Math.log() for logarithms (converted to log₂)
-- Canvas drawings for visualizations are redrawn on tab switches
-- No external dependencies or frameworks - pure vanilla implementation
+## Mathematical and educational rules
 
-## Development Commands
+- Reject invalid input without clamping, truncating or normalizing it silently. An empty field is not zero.
+- Distribution probabilities are in [0,1] and sum to 1 within 0.000001.
+- Information at probability zero is displayed as infinity by its limiting interpretation; log(0) is undefined over the reals.
+- An entropy term at probability zero contributes zero. Never calculate infinity minus infinity.
+- Independent joint information uses the sum of logarithms to avoid probability-product underflow.
+- Subjective surprise is recorded, never scored against an ideal line. Compare predicted and assigned probabilities instead.
+- Keep infinite records explicit in the list; plot only finite points. Limit records to 100.
+- Entropy is not semantic importance or a security certificate.
+- Average guesses (N+1)/2 assumes N equally likely candidates, no repeated guesses, and a recognizable correct answer.
+- Do not infer attack time, cryptographic strength or quantum resistance from entropy alone.
+- Teaching probabilities are not observations, forecasts or real lottery odds.
+- Keep Japanese and English assumptions and limitations equally explicit.
 
-This is a static site with no build process:
+## Validation
 
-```bash
-# Open directly in browser
-start index.html
+Run `npm test` with Node.js 22 or later; no install or build is required.
+For local HTTP checks, use `python -m http.server 8000` and open http://localhost:8000.
+Also verify file://, all seven tabs, both languages and themes, narrow/wide screens, keyboard tabs, invalid/zero inputs, language-switch state retention and unavailable storage.
 
-# Or serve locally with any static server
-python -m http.server 8000
-# Then open http://localhost:8000
-```
+Use known expected values rather than calculating expectations with the function under test.
+Changes to Japanese lesson text must update lesson-en.js in the same change.
+Capture real browser screenshots after UI changes; inspect them and keep each PNG below 300 KB.
+Update both README files together, including numbers, assumptions, links and the directory tree.
 
-For GitHub Pages deployment (already configured):
-- Push to main branch → automatically deployed to https://ipusiron.github.io/infoquantity-academy/
+## Publication
 
-## Testing Approach
-
-Manual testing in browser - no automated test framework configured. When making changes:
-1. Test all 7 tabs for functionality
-2. Verify calculations with known values (e.g., P=0.5 → I=1 bit)
-3. Check responsive design at different viewport sizes
-4. Test interactive elements (sliders, inputs, buttons)
-
-## Key Implementation Details
-
-- **Information quantity formula**: `I(a) = -log₂ P(a)` where log₂ is computed as `Math.log(x) / Math.log(2)`
-- **Canvas coordinate system**: Custom transforms for mathematical graph plotting with theme-aware colors
-- **Input validation**: Probability inputs must sum to 1.0 with real-time validation and sanitization
-- **Special cases**: P=0 displays as "∞ bit" since log(0) is undefined
-- **Theme system**: CSS Custom Properties enable seamless dark/light mode switching
-- **Security**: Content Security Policy headers and input sanitization for GitHub Pages deployment
-- **Responsive design**: Mobile-friendly layout with flexible grid systems
+Use a feature branch and pull request, wait for CI, and perform an ordinary merge.
+Check main-branch tests, Pages deployment and public assets against the merged commit.
+Do not delete branches until merge/publication and backup have been verified.

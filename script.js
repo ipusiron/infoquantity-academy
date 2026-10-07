@@ -19,7 +19,10 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const log2 = (x) => Math.log(x) / Math.log(2);
 
 // 数値の表示用フォーマット (有限数のみ小数点表示)
-const fmt = (x, d=4) => (Number.isFinite(x) ? x.toFixed(d) : "—");
+const fmt = (x, d=4) => x === Infinity ? '∞' : Number.isFinite(x) ? x.toFixed(d) : '—';
+const C = InfoCore;
+const bit = x => fmt(x) + ' bit';
+function errorText(error) { return t(error || 'invalid'); }
 
 /* ========= テーマ切り替えシステム ========= */
 const themeToggle = document.getElementById('theme-toggle');
@@ -27,7 +30,7 @@ const themeIcon = document.getElementById('theme-icon');
 const html = document.documentElement;
 
 // 初期化: ローカルストレージからテーマ設定を復元
-const savedTheme = localStorage.getItem('theme') || 'dark';
+const savedTheme = html.dataset.theme;
 html.setAttribute('data-theme', savedTheme);
 themeIcon.textContent = savedTheme === 'light' ? '🌙' : '☀️';
 
@@ -38,22 +41,23 @@ themeToggle.addEventListener('click', () => {
 
   // テーマ適用とアイコン更新
   html.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
+  InfoSettings.save('theme', newTheme);
   themeIcon.textContent = newTheme === 'light' ? '🌙' : '☀️';
 
   // Canvas描画はテーマ依存のため再描画が必要
-  if (document.querySelector('.panel.active').id === 'tab-def') {
-    drawILog();
-    drawCompare();
-  }
+  redrawGraphs();
 });
 
 /* ========= タブナビゲーション制御 ========= */
-// 5つのタブ間での切り替え処理
+// 7つのタブ間での切り替え処理
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     // 全タブのアクティブ状態をリセット
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', String(b === btn));
+      b.tabIndex = b === btn ? 0 : -1;
+    });
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
 
     // 選択されたタブをアクティブ化
@@ -73,11 +77,12 @@ document.querySelectorAll('.tab').forEach(btn=>{
 /**
  * 情報量グラフ I = -log₂ P の描画
  * 横軸: 確率P (0 < P ≤ 1)
- * 縦軸: 情報量I (0 ≤ I ≤ 8bit)
+ * 縦軸: 情報量I (0 ≤ I ≤ 16bit)
  */
 function drawILog(){
   const canvas = document.getElementById('canvas-logI');
   if(!canvas) return;
+  fitCanvas(canvas);
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0,0,W,H);
@@ -98,15 +103,16 @@ function drawILog(){
 
   // 情報量曲線の描画 P ∈ (0,1]
   const left = 40, top = 20, w = W-60, h = H-60;
-  const Imax = 8; // 表示上限: P→0で情報量は無限大だが8bitでキャップ
+  const Imax = 16; // Values above the plotting range are not replaced by finite caps.
 
   ctx.beginPath();
+  // Sample information uniformly so the near-zero part is not lost at pixel resolution.
   for(let i=0;i<=w;i++){
-    const P = clamp(i/w, 1e-6, 1); // P=0を避けるため最小値設定
-    const I = -log2(P);
-    const y = top + h - Math.min(I, Imax) / Imax * h;
-    const x = left + i;
-    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    const I = Imax * (1 - i / w);
+    const P = 2 ** -I;
+    const y = top + h - I / Imax * h;
+    const x = left + P * w;
+    if(i === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   }
   // テーマ対応の曲線色
   ctx.strokeStyle = isDark ? '#5aa9ff' : '#0066cc';
@@ -144,15 +150,20 @@ function drawILog(){
  * 範囲: x∈[0,4], y∈[-4,16]
  */
 function drawCompare(){
-  const a = Number(document.getElementById('cmp-base')?.value || 2);
+  const a = C.number(document.getElementById('cmp-base').value, 1 + Number.EPSILON, 100);
   const canvas = document.getElementById('canvas-compare');
   if(!canvas) return;
+  fitCanvas(canvas);
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0,0,W,H);
 
   // テーマ判定
   const isDark = html.getAttribute('data-theme') !== 'light';
+
+  const warning = document.getElementById('base-error');
+  if (warning) warning.textContent = a === null ? t('base') : '';
+  if (a === null) return;
 
   // coordinate box for x in [0,4], y in [-4,16] to show exponential growth and negative log values
   const left = 40, top = 20, w = W-60, h = H-60;
@@ -253,43 +264,20 @@ const sEls = ['s0','s1','s2','s3'].map(id=>document.getElementById(id)); // 計�
  * @returns {Object} - {val: 情報量, steps: 計算過程}
  */
 function calcI(p){
-  // 入力値の検証とサニタイズ
-  if (!Number.isFinite(p)) return { val: NaN, steps: '無効な入力値' };
-  p = Math.max(0, Math.min(1, p)); // [0,1]区間にクランプ
-
-  // 特殊ケースの処理
-  if(p === 0) return { val: NaN, steps: 'P=0 のとき log₂0 は未定義 → 計算不能' };
-  if(p < 0) return { val: NaN, steps: 'P<0 は不正' };
-  if(p > 1) return { val: NaN, steps: 'P>1 は不正' };
-
-  // 情報量計算
-  const I = -log2(p);
-  const steps =
-`I = -log₂(P)
-  = -log₂(${p})
-  = ${(-1).toString()} × ${fmt(log2(p),6)}
-  = ${fmt(I,6)} bit`;
-  return { val: I, steps };
+  const val = C.information(p);
+  if (val === null) return { val, steps: t('probability') };
+  return { val, steps: p === 0 ? t('zero') : 'I = −log₂(' + p + ') = ' + fmt(val, 6) + ' bit' };
 }
 function updateCalc(){
-  const ps = pEls.map(el=>{
-    let val = Number(el.value);
-    // Sanitize input
-    if (!Number.isFinite(val)) val = 0;
-    val = Math.max(0, Math.min(1, val));
-    return val;
-  });
-  const s = ps.reduce((a,b)=>a+b,0);
-  sumEl.textContent = s.toFixed(5);
-  if(Math.abs(s-1) > 1e-6){
-    errEl.classList.remove('hidden');
-  } else {
-    errEl.classList.add('hidden');
-  }
-  ps.forEach((p,idx)=>{
-    const {val, steps} = calcI(p);
-    iEls[idx].textContent = Number.isFinite(val) ? fmt(val,4) + ' bit' : '計算不能';
-    sEls[idx].textContent = steps;
+  const result = C.distribution(pEls.map(el => el.value));
+  sumEl.textContent = fmt(result.sum, 5);
+  errEl.classList.toggle('hidden', !result.error);
+  errEl.textContent = result.error ? errorText(result.error) : '';
+  pEls.forEach((el, idx) => {
+    el.setAttribute('aria-invalid', String(C.probability(el.value) === null));
+    const value = result.error ? { val: null, steps: errorText(result.error) } : calcI(result.ps[idx]);
+    iEls[idx].textContent = bit(value.val);
+    sEls[idx].textContent = value.steps;
   });
 }
 pEls.forEach(el=>el.addEventListener('input', updateCalc));
@@ -317,29 +305,15 @@ const IABEl = document.getElementById('IAB');
 const addStepsEl = document.getElementById('add-steps');
 
 function updateAdd(){
-  let pa = Number(paEl.value);
-  let pb = Number(pbEl.value);
-  // Sanitize inputs
-  if (!Number.isFinite(pa)) pa = 0;
-  if (!Number.isFinite(pb)) pb = 0;
-  pa = Math.max(0, Math.min(1, pa));
-  pb = Math.max(0, Math.min(1, pb));
-  const IA = (pa>0 && pa<=1) ? -log2(pa) : NaN;
-  const IB = (pb>0 && pb<=1) ? -log2(pb) : NaN;
-  const pab = pa*pb;
-  const IAB = (pab>0 && pab<=1) ? -log2(pab) : NaN;
-
-  IAEl.textContent = Number.isFinite(IA) ? fmt(IA,4)+' bit' : '計算不能';
-  IBEl.textContent = Number.isFinite(IB) ? fmt(IB,4)+' bit' : '計算不能';
-  IABEl.textContent = Number.isFinite(IAB) ? fmt(IAB,4)+' bit' : '計算不能';
-
-  addStepsEl.textContent =
-`独立事象:  P(A∧B) = P(A) × P(B) = ${fmt(pa)} × ${fmt(pb)} = ${fmt(pab)}
-I(A)   = -log₂ P(A) = ${Number.isFinite(IA)?fmt(IA,6):'—'}
-I(B)   = -log₂ P(B) = ${Number.isFinite(IB)?fmt(IB,6):'—'}
-I(A∧B) = -log₂ P(A∧B) = -log₂(${fmt(pab)}) = ${Number.isFinite(IAB)?fmt(IAB,6):'—'}
-
-確認:  I(A∧B)  = I(A) + I(B)  ≈  ${Number.isFinite(IA)&&Number.isFinite(IB)?fmt(IA+IB,6):'—'}`;
+  const result = C.independent(paEl.value, pbEl.value);
+  IAEl.textContent = bit(result.ia);
+  IBEl.textContent = bit(result.ib);
+  IABEl.textContent = bit(result.combined);
+  addStepsEl.textContent = result.error ? errorText(result.error) :
+    t('independent') + '\n' + result.pa + ' × ' + result.pb + ' = ' + result.product +
+    '\nI(A) + I(B) = ' + fmt(result.ia, 6) + ' + ' + fmt(result.ib, 6) +
+    ' = ' + fmt(result.combined, 6) + ' bit\n' +
+    t(result.underflow ? 'underflow' : result.combined === Infinity ? 'extended' : 'verified');
 }
 [paEl, pbEl].forEach(el=>el.addEventListener('input', updateAdd));
 updateAdd();
@@ -353,30 +327,13 @@ const ItotalEl = document.getElementById('Itotal');
 const aptStepsEl = document.getElementById('apt-steps');
 
 function updateApt(){
-  let F = Number(floorsEl.value);
-  let R = Number(perfloorEl.value);
-  // Sanitize inputs
-  if (!Number.isFinite(F) || F < 1) F = 1;
-  if (!Number.isFinite(R) || R < 1) R = 1;
-  F = Math.max(1, Math.min(1000, Math.floor(F))); // Cap at reasonable values
-  R = Math.max(1, Math.min(1000, Math.floor(R)));
-  const total = F*R;
-  // I(階特定) = -log2(1/F), I(号室特定) = -log2(1/R), I(部屋特定) = -log2(1/(F*R))
-  const If = -log2(1/F);
-  const Ir = -log2(1/R);
-  const It = -log2(1/total);
-
-  IfloorEl.textContent = fmt(If,4)+' bit';
-  IroomEl.textContent = fmt(Ir,4)+' bit';
-  ItotalEl.textContent = fmt(It,4)+' bit';
-
-  aptStepsEl.textContent =
-`総部屋数 = 階数 × 各階の部屋数 = ${F} × ${R} = ${total}
-I(階の特定)     = -log₂(1/${F})   = ${fmt(If,6)} bit
-I(号室の特定)   = -log₂(1/${R})   = ${fmt(Ir,6)} bit
-I(部屋番号の特定) = -log₂(1/${total}) = ${fmt(It,6)} bit
-
-確認: I(階) + I(号室) = ${fmt(If+Ir,6)} ≟ I(部屋) = ${fmt(It,6)}`;
+  const r = C.rooms(floorsEl.value, perfloorEl.value);
+  IfloorEl.textContent = bit(r.floorBits);
+  IroomEl.textContent = bit(r.roomBits);
+  ItotalEl.textContent = bit(r.totalBits);
+  aptStepsEl.textContent = r.error ? errorText(r.error) : t('roomSteps', {
+    f: r.floors, r: r.perFloor, n: r.total, a: fmt(r.floorBits), b: fmt(r.roomBits), c: fmt(r.totalBits)
+  });
 }
 [floorsEl, perfloorEl].forEach(el=>el.addEventListener('input', updateApt));
 updateApt();
@@ -391,7 +348,6 @@ function updateProp(){
   const I = (p>0 && p<=1)? -log2(p) : NaN;
   propIval.textContent = Number.isFinite(I)? I.toFixed(4) : '—';
 }
-propP?.addEventListener('input', updateProp);
 updateProp();
 
 /* ========= 5. エントロピー ========= */
@@ -402,179 +358,82 @@ const hvalEl = document.getElementById('hval');
 const hstepsEl = document.getElementById('hsteps');
 
 function entropy(ps){
-  // H = - Σ p log2 p ; 0 log 0 は 0 とみなす（極限）
-  let H = 0;
-  let terms = [];
-  for(const p of ps){
-    if(p > 0){
-      const t = -p * log2(p);
-      H += t;
-      terms.push(`- ${p.toFixed(6)} × log₂(${p.toFixed(6)}) = ${t.toFixed(6)}`);
-    } else if (p===0){
-      terms.push(`- 0 × log₂(0) → 0（極限的に 0 と扱う）`);
-    }
-  }
-  return {H, terms};
+  return C.distribution(ps);
 }
 
 function updateH(){
-  const ps = hxEls.map(el=>Number(el.value));
-  const s = ps.reduce((a,b)=>a+b,0);
-  hsumEl.textContent = s.toFixed(4);
-  if(Math.abs(s-1)>1e-6){ herrEl.classList.remove('hidden'); } else { herrEl.classList.add('hidden'); }
-  const {H, terms} = entropy(ps);
-  hvalEl.textContent = fmt(H,6) + ' bit';
-  hstepsEl.textContent = `H = - Σ p log₂ p
-  = ${terms.length? terms.join('  +\n    ') : '—'}
-  = ${fmt(H,6)} bit`;
+  const r = entropy(hxEls.map(el => el.value));
+  hsumEl.textContent = fmt(r.sum, 6);
+  herrEl.classList.toggle('hidden', !r.error);
+  herrEl.textContent = r.error ? errorText(r.error) : '';
+  hxEls.forEach(el => el.setAttribute('aria-invalid', String(C.probability(el.value) === null)));
+  hvalEl.textContent = bit(r.entropy);
+  hstepsEl.textContent = r.error ? errorText(r.error) :
+    'H = −Σ p log₂p\n' + r.ps.map((p, i) => p === 0 ? t('zeroTerm') :
+      '− ' + p + ' × log₂(' + p + ') = ' + fmt(r.terms[i], 6)).join('\n') +
+    '\nH = ' + fmt(r.entropy, 6) + ' bit';
 }
 hxEls.forEach(el=>el.addEventListener('input', updateH));
 updateH();
 
 /* ========= 新機能: 基礎知識タブのクイズシステム ========= */
 
-// クイズの正解と解説
-const quizAnswers = {
-  q1: { correct: 'b', explanation: 'log₂ 8 = 3 (2³ = 8 なので)' },
-  q2: { correct: 'a', explanation: 'log₂ (1/4) = log₂ (2⁻²) = -2' },
-  q3: { correct: 'b', explanation: '2ˣ = 16 = 2⁴ なので x = 4' }
-};
-
-let quizScore = 0;
-
-// クイズ回答処理
-document.querySelectorAll('input[type="radio"]').forEach(input => {
-  input.addEventListener('change', function() {
-    const questionName = this.name;
-    const resultEl = document.getElementById(`${questionName}-result`);
-    const answer = quizAnswers[questionName];
-
-    if (this.value === answer.correct) {
-      resultEl.innerHTML = `<span style="color: var(--accent2)">✓ 正解！</span> ${answer.explanation}`;
-      this.closest('.quiz-question').classList.add('correct');
-    } else {
-      resultEl.innerHTML = `<span style="color: var(--warn)">✗ 不正解</span> ${answer.explanation}`;
-      this.closest('.quiz-question').classList.remove('correct');
-    }
-
-    updateQuizScore();
-  });
-});
-
-// クイズスコア更新
+// Answers are stable IDs; explanations are localized separately.
+const quizAnswers = { q1: 'b', q2: 'a', q3: 'b' };
 function updateQuizScore() {
-  const correctCount = document.querySelectorAll('.quiz-question.correct').length;
-  const totalEl = document.getElementById('quiz-total');
-  if (totalEl) {
-    totalEl.textContent = `正解数: ${correctCount}/3`;
-    if (correctCount >= 2) {
-      totalEl.style.color = 'var(--accent2)';
-      totalEl.innerHTML += ' <span style="font-size: 12px">合格レベル！</span>';
-    }
+  let count = 0;
+  for (const [name, correct] of Object.entries(quizAnswers)) {
+    const selected = document.querySelector('input[name="' + name + '"]:checked');
+    const result = document.getElementById(name + '-result');
+    const ok = selected?.value === correct;
+    result.textContent = selected ? (ok ? '✓ ' + t('correct') : '✗ ' + t('incorrect')) + ': ' + t(name) : '';
+    result.closest('.quiz-question').classList.toggle('correct', Boolean(ok));
+    if (ok) count++;
   }
+  document.getElementById('quiz-total').textContent = t('quizTotal', { n: count });
 }
-
-// クイズリセット
-document.getElementById('quiz-reset')?.addEventListener('click', function() {
-  document.querySelectorAll('input[type="radio"]').forEach(input => input.checked = false);
-  document.querySelectorAll('.quiz-result').forEach(el => el.innerHTML = '');
-  document.querySelectorAll('.quiz-question').forEach(el => el.classList.remove('correct'));
+document.querySelectorAll('.quiz-options input').forEach(el => el.addEventListener('change', updateQuizScore));
+document.getElementById('quiz-reset').addEventListener('click', () => {
+  document.querySelectorAll('.quiz-options input').forEach(el => { el.checked = false; });
   updateQuizScore();
 });
 
 /* ========= 新機能: 体感タブの驚き度システム ========= */
 
-// シナリオデータ
+// Each entry is an individual event, not necessarily a disjoint exhaustive distribution.
 const scenarios = {
-  coin: {
-    title: 'コイン投げ',
-    description: '普通のコインを投げたとき...',
-    events: {
-      '表が出た': 0.5,
-      '裏が出た': 0.5,
-      '立った': 0.0001,
-      '割れた': 0.00001
-    }
-  },
-  dice: {
-    title: 'サイコロ',
-    description: '標準的な6面サイコロを振ったとき...',
-    events: {
-      '1が出た': 1/6,
-      '偶数が出た': 0.5,
-      '7が出た': 0,
-      '全面同じ数': 0.000001
-    }
-  },
-  lottery: {
-    title: '宝くじ',
-    description: '年末ジャンボ宝くじで...',
-    events: {
-      'はずれ': 0.999,
-      '末等当選': 0.0009,
-      '1等当選': 0.00000001,
-      '隕石に当たる': 0.0000000001
-    }
-  },
-  weather: {
-    title: '天気予報',
-    description: '明日の天気として...',
-    events: {
-      '晴れ': 0.4,
-      '雨': 0.3,
-      '雪（夏）': 0.0001,
-      '隕石雨': 0.0000000001
-    }
-  }
+  coin: { heads: .5, tails: .5, edge: .0001, broken: .00001 },
+  dice: { one: 1/6, even: .5, seven: 0, sixOnes: 1/46656 },
+  lottery: { lose: .999, smallWin: .0009, jackpot: .00000001, rareWin: .0000000001 },
+  weather: { sun: .4, rain: .3, snow: .0001, rareWeather: .0000000001 }
 };
-
-let currentEvent = { probability: 0.5, name: '表が出た' };
+let currentEvent = { probability: .5, name: 'heads' };
 let intuitionData = [];
-
-// シナリオ選択
-document.getElementById('scenario-select')?.addEventListener('change', function() {
-  const scenario = scenarios[this.value];
-  if (scenario) {
-    document.getElementById('scenario-title').textContent = scenario.title;
-    document.getElementById('scenario-desc').textContent = scenario.description;
-
-    // イベント選択肢を更新
-    const eventSelect = document.getElementById('event-select');
-    if (eventSelect) {
-      eventSelect.innerHTML = '';
-      Object.keys(scenario.events).forEach(eventName => {
-        const option = document.createElement('option');
-        option.value = eventName;
-        option.textContent = eventName;
-        eventSelect.appendChild(option);
-      });
-    }
-
-    // デフォルトイベントを設定
-    const firstEvent = Object.keys(scenario.events)[0];
-    currentEvent = {
-      name: firstEvent,
-      probability: scenario.events[firstEvent]
-    };
-
-    updateEventDisplay();
-    updateIntuitionDisplay();
-    hideResult(); // 結果を隠す
-  }
+function refreshScenario(reset = false) {
+  const key = document.getElementById('scenario-select').value;
+  const events = scenarios[key];
+  const eventSelect = document.getElementById('event-select');
+  const previous = eventSelect.value;
+  eventSelect.replaceChildren();
+  Object.keys(events).forEach(id => {
+    const option = document.createElement('option');
+    option.value = id; option.textContent = t(id);
+    eventSelect.appendChild(option);
+  });
+  if (!reset && Object.hasOwn(events, previous)) eventSelect.value = previous;
+  currentEvent = { probability: events[eventSelect.value], name: eventSelect.value };
+  document.getElementById('scenario-title').textContent = t(key);
+  document.getElementById('scenario-desc').textContent = t(key + 'Desc');
+  updateEventDisplay();
+  updateIntuitionDisplay();
+}
+document.getElementById('scenario-select').addEventListener('change', () => {
+  refreshScenario(true); hideResult();
 });
-
-// 出来事選択
-document.getElementById('event-select')?.addEventListener('change', function() {
-  const selectedScenario = scenarios[document.getElementById('scenario-select').value];
-  if (selectedScenario && selectedScenario.events[this.value] !== undefined) {
-    currentEvent = {
-      name: this.value,
-      probability: selectedScenario.events[this.value]
-    };
-    updateEventDisplay();
-    updateIntuitionDisplay();
-    hideResult(); // 結果を隠す
-  }
+document.getElementById('event-select').addEventListener('change', function () {
+  const events = scenarios[document.getElementById('scenario-select').value];
+  currentEvent = { name: this.value, probability: events[this.value] };
+  updateEventDisplay(); updateIntuitionDisplay(); hideResult();
 });
 
 // 結果表示/非表示の制御
@@ -585,36 +444,21 @@ function hideResult() {
     resultEl.classList.remove('visible');
   }
   if (buttonEl) {
-    buttonEl.textContent = '④答えを見る';
+    buttonEl.textContent = t('reveal');
     buttonEl.disabled = false;
   }
 }
 
 // 出来事表示更新
 function updateEventDisplay() {
-  const selectedEventEl = document.getElementById('selected-event');
-  if (selectedEventEl) {
-    selectedEventEl.textContent = `「${currentEvent.name}」`;
-  }
+  document.getElementById('selected-event').textContent = t(currentEvent.name);
 }
 
-// 答えを見るボタン
-document.getElementById('reveal-answer')?.addEventListener('click', function() {
-  const resultEl = document.querySelector('.comparison-result');
-  if (resultEl) {
-    resultEl.classList.add('visible');
-    resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-    // ボタンテキストを変更
-    this.textContent = '結果表示中';
-    this.disabled = true;
-
-    // 3秒後にボタンを再有効化
-    setTimeout(() => {
-      this.textContent = '④答えを見る';
-      this.disabled = false;
-    }, 3000);
-  }
+// The latest valid inputs are used; no delayed callbacks mutate a newer selection.
+document.getElementById('reveal-answer').addEventListener('click', function () {
+  updateIntuitionDisplay();
+  document.querySelector('.comparison-result').classList.add('visible');
+  this.textContent = t('revealed');
 });
 
 // 驚き度スライダー
@@ -628,86 +472,52 @@ document.getElementById('prob-guess')?.addEventListener('input', updateIntuition
 
 // 直感表示更新
 function updateIntuitionDisplay() {
-  const surpriseLevel = parseInt(document.getElementById('surprise-level')?.value || 5);
-  const probGuess = parseFloat(document.getElementById('prob-guess')?.value || 50) / 100;
-
-  // 理論的情報量
-  const theoreticalInfo = currentEvent.probability > 0 ? -log2(currentEvent.probability) : Infinity;
-
-  // 体感との一致度（驚き度を情報量に変換して比較）
-  // 改善: より適切なスケーリングと高情報量への対応
-  let surpriseInfo;
-  if (surpriseLevel <= 5) {
-    surpriseInfo = (surpriseLevel - 1) * 0.5; // 1-5 → 0-2 bit (低確率域)
-  } else {
-    surpriseInfo = 2 + (surpriseLevel - 5) * 4; // 6-10 → 2-22 bit (高確率域)
-  }
-
-  // 一致度計算の改善: 極端な情報量でも適切に評価
-  let matchScore;
-  if (theoreticalInfo > 20) {
-    // 極高情報量 (宝くじ級): 驚き8以上なら高評価
-    matchScore = surpriseLevel >= 8 ? 90 : Math.max(10, 50 - (8 - surpriseLevel) * 10);
-  } else if (theoreticalInfo > 10) {
-    // 高情報量: 驚き7以上で高評価
-    matchScore = surpriseLevel >= 7 ? 85 : Math.max(20, 70 - Math.abs(theoreticalInfo - surpriseInfo) * 5);
-  } else {
-    // 通常範囲: 従来の計算
-    matchScore = Math.max(0, 100 - Math.abs(theoreticalInfo - surpriseInfo) * 15);
-  }
-
-  // UI更新
-  document.getElementById('actual-prob').textContent = (currentEvent.probability * 100).toFixed(4) + '%';
-  document.getElementById('theoretical-info').textContent = fmt(theoreticalInfo, 2) + ' bit';
-  document.getElementById('match-score').textContent = Math.round(matchScore) + '%';
-
-  // 説明文生成
-  const explanation = generateIntuitionExplanation(surpriseLevel, theoreticalInfo, matchScore);
-  document.getElementById('intuition-explanation').textContent = explanation;
+  const percent = C.number(document.getElementById('prob-guess').value, 0, 100);
+  const r = percent === null ? { error: 'guessError' } : C.compare(percent / 100, currentEvent.probability);
+  document.getElementById('actual-prob').textContent = (currentEvent.probability * 100).toPrecision(6) + '%';
+  document.getElementById('theoretical-info').textContent = bit(C.information(currentEvent.probability));
+  document.getElementById('guess-info').textContent = bit(r.ia);
+  document.getElementById('intuition-explanation').textContent = r.error ? t('guessError') : t('comparison', {
+    guess: fmt(r.ia), actual: fmt(r.ib), difference: fmt(r.informationDifference)
+  });
+  document.getElementById('prob-guess').setAttribute('aria-invalid', String(Boolean(r.error)));
+  document.getElementById('add-data-point').disabled = Boolean(r.error) || intuitionData.length >= 100;
+  document.getElementById('record-note').textContent = t(intuitionData.length >= 100 ? 'countLimit' : 'graphNote');
 }
 
-function generateIntuitionExplanation(surprise, theoretical, match) {
-  if (theoretical > 20) {
-    // 宝くじレベルの極低確率
-    if (surprise >= 9) return `驚き度${surprise}は宝くじ級(${fmt(theoretical,1)} bit)に適切です。完璧な直感！`;
-    if (surprise >= 7) return `驚き度${surprise}は宝くじ級(${fmt(theoretical,1)} bit)の出来事への反応として妥当です。`;
-    return `宝くじ級(${fmt(theoretical,1)} bit)の出来事なら、もっと驚いても良いかも！`;
-  } else if (theoretical > 10) {
-    // 非常に稀な出来事
-    if (surprise >= 7) return `驚き度${surprise}は非常に稀な出来事(${fmt(theoretical,1)} bit)への適切な反応です。`;
-    return `${fmt(theoretical,1)} bitの稀な出来事です。もう少し驚いてもよいでしょう。`;
-  } else {
-    // 通常範囲
-    if (match > 80) return `驚き度${surprise}は情報量${fmt(theoretical,1)} bitによく対応しています。優秀な直感です！`;
-    if (match > 60) return `驚き度${surprise}は情報量${fmt(theoretical,1)} bitにまあまあ対応しています。`;
-    if (match > 40) return `驚き度${surprise}と情報量${fmt(theoretical,1)} bitに少しズレがあります。`;
-    return `驚き度${surprise}と情報量${fmt(theoretical,1)} bitのズレが大きいです。対数的感覚を養いましょう。`;
-  }
-}
-
-// データポイント記録
-document.getElementById('add-data-point')?.addEventListener('click', function() {
-  const surprise = parseInt(document.getElementById('surprise-level').value);
-  const theoretical = currentEvent.probability > 0 ? -log2(currentEvent.probability) : 16;
-
-  intuitionData.push({ surprise, theoretical, event: currentEvent.name });
-  document.getElementById('point-count').textContent = intuitionData.length;
-
-  drawIntuitionGraph();
+// Record both the predicted and model probability, keeping zero-probability events explicit.
+document.getElementById('add-data-point').addEventListener('click', function () {
+  const percent = C.number(document.getElementById('prob-guess').value, 0, 100);
+  if (percent === null || intuitionData.length >= 100) return;
+  intuitionData.push({ surprise: Number(document.getElementById('surprise-level').value),
+    theoretical: C.information(currentEvent.probability), event: currentEvent.name,
+    predicted: percent / 100, probability: currentEvent.probability });
+  renderRecords(); updateIntuitionDisplay(); drawIntuitionGraph();
 });
-
-// データクリア
-document.getElementById('clear-data')?.addEventListener('click', function() {
+document.getElementById('clear-data').addEventListener('click', () => {
   intuitionData = [];
-  document.getElementById('point-count').textContent = '0';
-  drawIntuitionGraph();
+  renderRecords(); updateIntuitionDisplay(); drawIntuitionGraph();
 });
+function renderRecords() {
+  document.getElementById('point-count').textContent = intuitionData.length;
+  const list = document.getElementById('record-list');
+  list.replaceChildren();
+  intuitionData.forEach(point => {
+    const item = document.createElement('li');
+    item.textContent = t(point.event) + ' / ' + t('surprise') + ': ' + point.surprise +
+      ' / ' + t('guess') + ': ' + (point.predicted * 100).toPrecision(6) + '%' +
+      ' / ' + t('setting') + ': ' + (point.probability * 100).toPrecision(6) + '%' +
+      ' / I: ' + bit(point.theoretical);
+    list.appendChild(item);
+  });
+}
 
 // 直感グラフ描画
 function drawIntuitionGraph() {
   const canvas = document.getElementById('intuition-graph');
   if (!canvas) return;
 
+  fitCanvas(canvas);
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
@@ -724,27 +534,21 @@ function drawIntuitionGraph() {
   const graphH = H - 2 * margin;
 
   ctx.strokeRect(margin, margin, graphW, graphH);
-  ctx.fillText('驚き度 (主観)', W/2 - 30, H - 20);
+  ctx.fillText(t('subject'), W/2 - 50, H - 20);
   ctx.save();
   ctx.translate(20, H/2);
   ctx.rotate(-Math.PI/2);
-  ctx.fillText('情報量 (理論) [bit]', -40, 0);
+  ctx.fillText(t('information'), -70, 0);
   ctx.restore();
 
-  // 理想線（y=x的な関係）描画
-  ctx.strokeStyle = isDark ? '#5aa9ff' : '#0066cc';
-  ctx.setLineDash([5, 5]);
-  ctx.beginPath();
-  ctx.moveTo(margin, margin + graphH);
-  ctx.lineTo(margin + graphW, margin);
-  ctx.stroke();
-  ctx.setLineDash([]);
+  const finitePoints = intuitionData.filter(point => Number.isFinite(point.theoretical));
+  const maxBits = Math.max(4, ...finitePoints.map(point => Math.ceil(point.theoretical / 4) * 4));
 
   // データポイント描画
   ctx.fillStyle = isDark ? '#49d492' : '#28a745';
-  intuitionData.forEach(point => {
+  finitePoints.forEach(point => {
     const x = margin + (point.surprise - 1) / 9 * graphW;
-    const y = margin + graphH - Math.min(point.theoretical, 16) / 16 * graphH;
+    const y = margin + graphH - point.theoretical / maxBits * graphH;
 
     ctx.beginPath();
     ctx.arc(x, y, 4, 0, 2 * Math.PI);
@@ -757,8 +561,8 @@ function drawIntuitionGraph() {
     const x = margin + (i - 1) / 9 * graphW;
     ctx.fillText(i.toString(), x - 3, H - margin + 15);
   }
-  for (let i = 0; i <= 16; i += 4) {
-    const y = margin + graphH - i / 16 * graphH;
+  for (let i = 0; i <= maxBits; i += maxBits / 4) {
+    const y = margin + graphH - i / maxBits * graphH;
     ctx.fillText(i.toString(), margin - 20, y + 4);
   }
 }
@@ -767,20 +571,10 @@ function drawIntuitionGraph() {
 
 // パスワード強度計算
 function updatePasswordEntropy() {
-  const length = parseInt(document.getElementById('pwd-length')?.value || 8);
-  const charTypes = parseInt(document.getElementById('char-types')?.value || 62);
-
-  const entropy = length * log2(charTypes);
-  const guessCount = Math.pow(2, entropy - 1); // 平均試行回数
-
-  let security = '弱い';
-  if (entropy > 80) security = '非常に強い';
-  else if (entropy > 60) security = '強い';
-  else if (entropy > 40) security = '中程度';
-
-  document.getElementById('pwd-entropy').textContent = fmt(entropy, 1) + ' bit';
-  document.getElementById('guess-count').textContent = guessCount.toExponential(1) + ' 回';
-  document.getElementById('security-level').textContent = security;
+  const r = C.password(document.getElementById('pwd-length').value, document.getElementById('char-types').value);
+  document.getElementById('pwd-entropy').textContent = bit(r.bits);
+  document.getElementById('guess-count').textContent = r.error ? '—' : t('attempts', { n: r.average.toExponential(6) });
+  document.getElementById('security-level').textContent = r.error ? errorText(r.error) : t('model');
 }
 
 document.getElementById('pwd-length')?.addEventListener('input', updatePasswordEntropy);
@@ -812,6 +606,7 @@ function drawMonotonicGraph() {
   const canvas = document.getElementById('monotonic-canvas');
   if (!canvas) return;
 
+  fitCanvas(canvas);
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
@@ -836,10 +631,10 @@ function drawMonotonicGraph() {
   ctx.lineWidth = 2;
   ctx.beginPath();
   for (let i = 0; i <= graphW; i++) {
-    const P = Math.max(0.001, i / graphW);
+    const P = Math.max(0.0001, i / graphW);
     const I = -log2(P);
     const x = margin + i;
-    const y = margin + graphH - Math.min(I, 8) / 8 * graphH;
+    const y = margin + graphH - I / 16 * graphH;
     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   }
   ctx.stroke();
@@ -848,7 +643,7 @@ function drawMonotonicGraph() {
   const currentP = parseFloat(document.getElementById('propP')?.value || 0.5);
   const currentI = -log2(currentP);
   const currentX = margin + currentP * graphW;
-  const currentY = margin + graphH - Math.min(currentI, 8) / 8 * graphH;
+  const currentY = margin + graphH - currentI / 16 * graphH;
 
   ctx.fillStyle = isDark ? '#ff6b6b' : '#dc3545';
   ctx.beginPath();
@@ -862,61 +657,32 @@ function drawMonotonicGraph() {
     const x = margin + p * graphW;
     ctx.fillText(p.toFixed(1), x - 10, H - margin + 15);
   }
-  for (let i = 0; i <= 8; i += 2) {
-    const y = margin + graphH - i / 8 * graphH;
+  for (let i = 0; i <= 16; i += 4) {
+    const y = margin + graphH - i / 16 * graphH;
     ctx.fillText(i.toString(), margin - 20, y + 4);
   }
 }
 
 // 連続性計算
 function updateContinuityDemo() {
-  const p1 = parseFloat(document.getElementById('p1-input')?.value || 0.5);
-  const p2 = parseFloat(document.getElementById('p2-input')?.value || 0.51);
-
-  const i1 = -log2(p1);
-  const i2 = -log2(p2);
-
-  document.getElementById('i1-result').textContent = fmt(i1, 4);
-  document.getElementById('i2-result').textContent = fmt(i2, 4);
-  document.getElementById('p-diff').textContent = Math.abs(p2 - p1).toFixed(4);
-  document.getElementById('i-diff').textContent = Math.abs(i2 - i1).toFixed(4);
-
-  // 連続性判定
-  const pDiff = Math.abs(p2 - p1);
-  const iDiff = Math.abs(i2 - i1);
-  const verdict = document.getElementById('continuity-verdict');
-
-  if (pDiff < 0.1 && iDiff < 1.0) {
-    verdict.textContent = '✅ 連続性が保たれています';
-    verdict.style.color = 'var(--accent2)';
-  } else if (pDiff < 0.2) {
-    verdict.textContent = '⚠️ やや連続的です';
-    verdict.style.color = 'var(--warn)';
-  } else {
-    verdict.textContent = '❌ 大きな変化です';
-    verdict.style.color = 'var(--warn)';
-  }
+  const r = C.compare(document.getElementById('p1-input').value, document.getElementById('p2-input').value);
+  document.getElementById('i1-result').textContent = fmt(r.ia);
+  document.getElementById('i2-result').textContent = fmt(r.ib);
+  document.getElementById('p-diff').textContent = fmt(r.probabilityDifference);
+  document.getElementById('i-diff').textContent = fmt(r.informationDifference);
+  document.getElementById('continuity-verdict').textContent = r.error ? errorText(r.error) :
+    t(r.pa === 0 || r.pb === 0 ? 'continuityZero' : 'continuity');
 }
 
 // 加法性の計算
 function updateAdditivityDemo() {
-  const pa = parseFloat(document.getElementById('custom-pa')?.value || 0.3);
-  const pb = parseFloat(document.getElementById('custom-pb')?.value || 0.4);
-
-  const ia = -log2(pa);
-  const ib = -log2(pb);
-  const pab = pa * pb;
-  const iab = -log2(pab);
-  const sum = ia + ib;
-
-  document.getElementById('custom-ia').textContent = fmt(ia, 2);
-  document.getElementById('custom-ib').textContent = fmt(ib, 2);
-  document.getElementById('custom-pab').textContent = fmt(pab, 4);
-  document.getElementById('custom-iab').textContent = fmt(iab, 2);
-  document.getElementById('custom-sum').textContent = fmt(sum, 2);
-
-  const match = Math.abs(iab - sum) < 0.001 ? 100 : Math.max(0, 100 - Math.abs(iab - sum) * 100);
-  document.getElementById('additivity-check').textContent = Math.round(match) + '%';
+  const r = C.independent(document.getElementById('custom-pa').value, document.getElementById('custom-pb').value);
+  for (const [id, value] of Object.entries({
+    'custom-ia': r.ia, 'custom-ib': r.ib, 'custom-pab': r.product,
+    'custom-iab': r.combined, 'custom-sum': r.combined
+  })) document.getElementById(id).textContent = fmt(value);
+  document.getElementById('additivity-check').textContent = r.error ? errorText(r.error) :
+    t(r.underflow ? 'underflow' : r.combined === Infinity ? 'extended' : 'verified');
 }
 
 // 規格化の計算
@@ -956,8 +722,7 @@ function updatePropertiesDisplay() {
 
 // イベントリスナー
 document.getElementById('propP')?.addEventListener('input', function() {
-  document.getElementById('propPval').textContent = parseFloat(this.value).toFixed(4);
-  document.getElementById('propIval').textContent = fmt(-log2(parseFloat(this.value)), 4);
+  updateProp();
   drawMonotonicGraph();
 });
 
@@ -969,3 +734,65 @@ document.getElementById('norm-base')?.addEventListener('change', updateNormaliza
 
 // 初期化
 updatePropertiesDisplay();
+
+function redrawGraphs() {
+  drawILog(); drawCompare(); drawIntuitionGraph(); drawMonotonicGraph();
+}
+refreshScenario(true);
+renderRecords();
+updateQuizScore();
+
+function fitCanvas(canvas) {
+  const width = Math.floor(canvas.getBoundingClientRect().width);
+  if (width > 0) {
+    canvas.width = width;
+    canvas.height = Math.max(240, Math.round(width * 2 / 3));
+  }
+}
+window.addEventListener('resize', redrawGraphs);
+const tabButtons = [...document.querySelectorAll('.tab')];
+tabButtons.forEach((button, index) => {
+  button.id = 'button-' + button.dataset.tab;
+  button.setAttribute('role', 'tab');
+  button.setAttribute('aria-controls', button.dataset.tab);
+  button.tabIndex = index === 0 ? 0 : -1;
+  const panel = document.getElementById(button.dataset.tab);
+  panel.setAttribute('role', 'tabpanel');
+  panel.setAttribute('aria-labelledby', button.id);
+  button.addEventListener('keydown', event => {
+    const positions = { ArrowRight: (index + 1) % 7, ArrowLeft: (index + 6) % 7, Home: 0, End: 6 };
+    if (!Object.hasOwn(positions, event.key)) return;
+    event.preventDefault();
+    const target = tabButtons[positions[event.key]];
+    target.click(); target.focus();
+  });
+});
+document.querySelectorAll('.inputs label').forEach((label, index) => {
+  const input = label.parentElement.querySelector('input');
+  if (!input.id) input.id = 'field-' + index;
+  label.htmlFor = input.id;
+});
+document.querySelectorAll('.scenario-select h4, .event-select h4').forEach((label, index) => {
+  label.id = 'select-label-' + index;
+  label.parentElement.querySelector('select').setAttribute('aria-labelledby', label.id);
+});
+document.querySelectorAll('.quiz-question').forEach((question, index) => {
+  const heading = question.querySelector('h4');
+  heading.id = 'quiz-heading-' + index;
+  question.setAttribute('role', 'group');
+  question.setAttribute('aria-labelledby', heading.id);
+});
+document.querySelectorAll('.error, .quiz-result, #intuition-explanation, #continuity-verdict')
+  .forEach(el => el.setAttribute('aria-live', 'polite'));
+document.querySelectorAll('.char-frequency').forEach(el => {
+  el.tabIndex = 0;
+  el.setAttribute('role', 'region');
+});
+
+document.addEventListener('languagechange', () => {
+  updateCalc(); updateAdd(); updateApt(); updateProp(); updateH();
+  updatePasswordEntropy(); updatePropertiesDisplay();
+  refreshScenario(); renderRecords(); updateQuizScore(); redrawGraphs();
+  document.getElementById('reveal-answer').textContent = t(
+    document.querySelector('.comparison-result').classList.contains('visible') ? 'revealed' : 'reveal');
+});

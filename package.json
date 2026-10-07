@@ -1,0 +1,6 @@
+{
+  "name": "infoquantity-academy",
+  "private": true,
+  "scripts": { "test": "node --test" },
+  "engines": { "node": ">=22" }
+}
