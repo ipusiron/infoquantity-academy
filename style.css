@@ -1149,6 +1149,14 @@ footer .footer a{color:var(--accent)}
 }
 
 /* Narrow screens remain the baseline; charts redraw at their displayed size. */
+.learning-actions { display:flex; flex-wrap:wrap; gap:12px; margin:16px 0; }
+.learning-actions button { padding:8px 12px; background:var(--box); color:var(--text); border:1px solid var(--border); border-radius:8px; }
+.learning-actions button:hover { background:var(--steps-bg); color:var(--text); }
+.learning-table { width:100%; table-layout:fixed; border-collapse:collapse; margin:16px 0; }
+.learning-table th, .learning-table td { padding:8px 4px; border-bottom:1px solid var(--border); overflow-wrap:anywhere; }
+.learning-table caption { text-align:left; font-weight:700; padding:8px 0; }
+.learning-table progress { display:block; width:100%; height:12px; margin-top:8px; accent-color:var(--accent); }
+.distribution-b { border-top:1px solid var(--border); margin-top:24px; padding-top:12px; }
 body { overflow-wrap:anywhere; }
 main *, .site-header * { min-width:0; }
 canvas { display:block; width:100%; max-width:600px; height:auto; margin:16px auto; }

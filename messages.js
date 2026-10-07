@@ -2,6 +2,15 @@
 (function (root) {
   'use strict';
   const ja = {
+    distributionA: '分布A', distributionB: '分布B',
+    uniform: '均等', biased: '偏りあり', certain: '1事象に集中', binary: '2事象で均等',
+    presetLabel: '{name}の例を入れる', outcome: '事象', probabilityValue: '確率P',
+    individualInformation: '情報量I [bit]', contribution: '寄与P×I [bit]',
+    entropySummary: '{name}：H={value} bit／4事象での最大値は2 bit',
+    distributionError: '{name}：0～1の確率を4つ入力し、合計を1にしてください（許容誤差0.000001）。',
+    entropyExplanation: '表の棒は各項の寄与を表します。P=0の情報量は極限として∞、寄与は0です。最大値は確率0の項も含む4事象を基準にします。',
+    entropyDifference: 'H(B)−H(A)={value} bit。これは分布間の距離ではありません。同じエントロピーでも分布は異なり得ます。',
+    compareInvalid: '両方の分布が有効になると、エントロピーの差を表示します。',
     probability: '確率を0以上1以下の数値で入力してください。空欄は0ではありません。',
     sum: '確率の合計を1にしてください（許容誤差0.000001）。自動補正はしません。',
     rooms: '階数と部屋数を1～1000の整数で入力してください。',
@@ -38,6 +47,15 @@
     theme: 'ライト／ダークを切り替える', tabs: '学習タブ', invalid: '入力を確認してください。'
   };
   const en = {
+    distributionA: 'Distribution A', distributionB: 'Distribution B',
+    uniform: 'Uniform', biased: 'Biased', certain: 'One certain outcome', binary: 'Two equal outcomes',
+    presetLabel: 'Load an example for {name}', outcome: 'Outcome', probabilityValue: 'Probability P',
+    individualInformation: 'Information I [bit]', contribution: 'Contribution P×I [bit]',
+    entropySummary: '{name}: H={value} bit / maximum for four outcomes: 2 bit',
+    distributionError: '{name}: enter four probabilities from 0 to 1, summing to 1 (tolerance 0.000001).',
+    entropyExplanation: 'The bars show each term’s contribution. At P=0, information is ∞ by a limit and the contribution is 0. The maximum uses four outcomes, including zero-probability ones.',
+    entropyDifference: 'H(B)−H(A)={value} bit. This is not a distance between distributions. Different distributions can have the same entropy.',
+    compareInvalid: 'The entropy difference is shown when both distributions are valid.',
     probability: 'Enter a probability from 0 to 1. An empty field is not zero.',
     sum: 'Probabilities must sum to 1 (tolerance 0.000001). Values are not adjusted automatically.',
     rooms: 'Enter integers from 1 to 1000 for floors and rooms per floor.',
