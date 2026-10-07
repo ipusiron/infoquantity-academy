@@ -86,14 +86,14 @@
 
         <div class="accordion">
           <details>
-            <summary>ステップ1: 「珍しさ」と「情報の価値」</summary>
+            <summary>ステップ1: 「珍しさ」と「情報量」</summary>
             <p>日常生活で考えてみると：</p>
             <ul>
-              <li>「明日は雨が降る」（確率30%）→ まあまあ珍しい → 少し意味のある情報</li>
-              <li>「明日は隕石が落ちる」（確率0.001%）→ 非常に珍しい → 極めて重要な情報</li>
-              <li>「明日は太陽が昇る」（確率99.99%）→ 当たり前 → ほとんど意味のない情報</li>
+              <li>教材で雨の確率を30%と設定すると、雨が降ったときの情報量は約1.74bit</li>
+              <li>教材で出来事の確率を0.001%と設定すると、情報量は約16.61bit</li>
+              <li>確実に起きるとモデルで仮定した出来事の情報量は0bit</li>
             </ul>
-            <p>つまり、<strong>確率が低い（珍しい）ほど、情報として価値が高い</strong>と直感的に感じられます。</p>
+            <p>つまり、<strong>同じモデルで確率が低いほど情報量が大きい</strong>と定義します。内容の重要性や感情的な驚きとは別の尺度です。</p>
           </details>
 
           <details>
@@ -102,7 +102,7 @@
             <ul>
               <li>コインで表が出る（1/2）+ サイコロで6が出る（1/6）</li>
               <li>同時に起こる確率：1/2 × 1/6 = 1/12</li>
-              <li>情報の価値は「足し算」されるべき：I(表) + I(6) = I(表かつ6)</li>
+              <li>情報量に「足し算」を要求する：I(表) + I(6) = I(表かつ6)</li>
             </ul>
             <p>確率は「掛け算」、情報量は「足し算」になるような関数が必要です。</p>
           </details>
@@ -142,8 +142,8 @@
           <div class="category">
             <h4>📰 ニュース・メディア</h4>
             <ul>
-              <li><strong>ボガートの名言</strong>：「犬が人を噛んでもニュースにならないが、人が犬を噛んだらニュースになる」→ めったに起きないほど情報量が大きい</li>
-              <li><strong>スポーツ</strong>：「王者が勝利」(確率70%) vs 「大番狂わせ」(確率5%) → 後者の方が大きなニュース</li>
+              <li><strong>ニュースのたとえ</strong>：「犬が人を噛んでもニュースにならないが、人が犬を噛んだらニュースになる」→ めったに起きないほど情報量が大きい</li>
+              <li><strong>スポーツ</strong>：教材で「王者が勝利」を70%、「大番狂わせ」を5%と設定すると、後者の情報量が大きい</li>
               <li><strong>芸能</strong>：「人気俳優の結婚発表」→ 予想外度が高いほど話題性が大きい</li>
             </ul>
           </div>
@@ -152,7 +152,7 @@
             <h4>🎲 ゲーム・確率</h4>
             <ul>
               <li><strong>コイン投げ</strong>：「表が出た」(50%) より「立った」(0.01%) はまれ → 情報量が大きい</li>
-              <li><strong>サイコロ</strong>：「1が出た」(1/6) より「連続で6回同じ目」(1/6⁶) → 後者は驚異的</li>
+              <li><strong>サイコロ</strong>：「1が出た」(1/6) より「連続で6回とも1の目」(1/6⁶) → 後者は驚異的</li>
               <li><strong>宝くじ</strong>：「はずれ」は当たり前、「1等当選」は人生を変える情報</li>
             </ul>
           </div>
@@ -162,7 +162,7 @@
             <ul>
               <li><strong>天気</strong>：「晴れの日に雨」→ 予報が外れると情報価値が高い</li>
               <li><strong>交通</strong>：「電車が定刻」は当然、「大幅遅延」は重要情報</li>
-              <li><strong>メール</strong>：「スパム」vs「重要な連絡」→ 受信頻度の逆数が情報量</li>
+              <li><strong>メール</strong>：「スパム」vs「重要な連絡」→ 情報量は、モデルでの確率の逆数の対数</li>
             </ul>
           </div>
 
@@ -171,14 +171,14 @@
             <ul>
               <li><strong>試験結果</strong>：「予想通りの点数」vs「予想外の高得点/低得点」</li>
               <li><strong>科学的発見</strong>：「既知の法則通り」vs「新しい現象の発見」</li>
-              <li><strong>AI予測</strong>：「高確信度の予測」vs「低確信度だが的中」→ 後者の価値が高い</li>
+              <li><strong>AI予測</strong>：「高確信度の予測」vs「低確信度だが的中」→ 設定した確率が低いほど情報量が大きい</li>
             </ul>
           </div>
         </div>
 
         <div class="key-insight">
           <h4>🔑 重要な洞察</h4>
-          <p><strong>情報の価値 ≠ 情報量</strong>：受け手にとっての「価値」と、確率にもとづく「情報量」は区別して考える必要があります。情報量は客観的な尺度、価値は主観的な判断です。</p>
+          <p><strong>情報の価値 ≠ 情報量</strong>：受け手にとっての「価値」と、確率にもとづく「情報量」は区別して考える必要があります。情報量は選んだ確率モデルから計算する尺度で、価値とは別です。例の確率は教材用の設定値です。</p>
         </div>
       </div>
 
@@ -188,7 +188,7 @@
         <pre class="math">I(a) = - log₂ P(a)</pre>
         <p>と定義する（単位：bit）。</p>
         <ul>
-          <li><strong>非負</strong>：<code>0 ≤ P ≤ 1</code> なので <code>I ≥ 0</code></li>
+          <li><strong>非負</strong>：<code>0 &lt; P ≤ 1</code> なので <code>I ≥ 0</code></li>
           <li><strong>単調減少</strong>：めったに起きないほど値が大きい</li>
           <li><strong>P=1でI=0</strong>：確実な事象は情報量ゼロ</li>
         </ul>
@@ -198,7 +198,7 @@
         <div class="card">
           <h3>I = -log₂ P のグラフ</h3>
           <canvas id="canvas-logI" width="520" height="340" aria-label="I=-log2(P) graph"></canvas>
-          <div class="note">横軸: P (0&lt;P≤1), 縦軸: I=-log₂P</div>
+          <div class="note">横軸: P (0&lt;P≤1), 縦軸: I=-log₂P。上限16bitを超える部分は枠外です。</div>
           <div class="tool-explanation">
             <h4>📊 このグラフの見方</h4>
             <ul>
@@ -224,11 +224,11 @@
             <h4>🔧 操作方法</h4>
             <p><strong>底aを変更</strong>して3つの関数の関係性を比較できます。</p>
             <ul>
-              <li><strong>指数関数（青）</strong>：急激に増加、情報の「爆発的拡散」</li>
+              <li><strong>指数関数（青）</strong>：急激に増加、y=aˣ</li>
               <li><strong>一次関数（黄）</strong>：直線的増加、比例関係</li>
-              <li><strong>対数関数（水色）</strong>：緩やかに増加、情報量の「圧縮効果」</li>
+              <li><strong>対数関数（水色）</strong>：緩やかに増加、y=logₐx</li>
             </ul>
-            <p>a=2のとき、指数と対数は互いに逆関数の関係にあります。</p>
+            <p>a&gt;1のとき、指数と対数は互いに逆関数です。表示範囲の外側は省略しています。</p>
           </div>
         </div>
       </div>
@@ -267,7 +267,7 @@
 
           <div class="scenario-description">
             <h4 id="scenario-title">コイン投げ</h4>
-            <p><span id="scenario-desc">普通のコインを投げたとき</span><strong id="selected-event">「表が出た」</strong>という結果になった...</p>
+            <p id="scenario-desc"></p><p id="selected-event"></p><p>各選択肢は個別の出来事です。互いに重なる場合があり、一覧全体で確率分布を表すものではありません。</p>
           </div>
 
           <div class="surprise-input">
@@ -282,27 +282,27 @@
               <h4>この出来事の確率はどのくらいだと思いますか？</h4>
               <label for="prob-guess">確率予想（%）</label>
               <input type="number" id="prob-guess" min="0" max="100" step="0.1" value="50">
-              <button id="reveal-answer">④答えを見る</button>
+              <button id="reveal-answer">④設定値と比較する</button>
             </div>
           </div>
 
           <div class="comparison-result">
             <div class="grid-3">
               <div class="result-box">
-                <h5>実際の確率</h5>
+                <h5>教材の設定確率</h5>
                 <div class="result-value" id="actual-prob">50%</div>
               </div>
               <div class="result-box">
-                <h5>理論的情報量</h5>
+                <h5>設定確率からの情報量</h5>
                 <div class="result-value" id="theoretical-info">1.00 bit</div>
               </div>
               <div class="result-box">
-                <h5>直感の精度</h5>
-                <div class="result-value" id="match-score">80%</div>
+                <h5>予想確率からの情報量</h5>
+                <div class="result-value" id="guess-info">— bit</div>
               </div>
             </div>
             <div class="explanation" id="intuition-explanation">
-              驚き度5は情報量1.00 bitにほぼ対応しています。良い直感です！
+              予想確率と設定確率を比較します。驚き度は採点しません。
             </div>
           </div>
 
@@ -320,7 +320,7 @@
 
       <div class="card">
         <h3>📊 直感と理論の比較グラフ</h3>
-        <p>あなたの「驚き度」がどれくらい正確か、グラフで可視化して直感を鍛えましょう。</p>
+        <p>主観の驚き度と、教材の設定確率から計算した情報量を記録します。正解の線や採点はありません。</p>
 
         <div class="tutorial-section">
           <h4>🎯 使い方チュートリアル</h4>
@@ -343,20 +343,22 @@
               <div class="step-number">3</div>
               <div class="step-content">
                 <strong>パターンを観察</strong><br>
-                点が破線（理想線）に近いほど、あなたの直感が正確
+                横軸は主観の驚き度、縦軸は設定確率からの情報量
               </div>
             </div>
             <div class="tutorial-step">
               <div class="step-number">4</div>
               <div class="step-content">
-                <strong>直感を改善</strong><br>
-                練習を重ねて点が理想線に近づくように調整
+                <strong>記録を比較</strong><br>
+                同じ確率でも出来事によって感じ方が違うかを観察
               </div>
             </div>
           </div>
         </div>
 
         <canvas id="intuition-graph" width="600" height="400" aria-label="Intuition vs Theory comparison"></canvas>
+        <p id="record-note" role="status"></p>
+        <ol id="record-list" aria-label="記録した出来事"></ol>
 
         <div class="graph-controls">
           <button id="add-data-point">現在の値を記録</button>
@@ -370,25 +372,25 @@
             <div class="interpretation-item good">
               <div class="pattern-icon">✅</div>
               <div class="pattern-desc">
-                <strong>理想的パターン</strong><br>
-                点が破線に沿って並ぶ<br>
-                <small>あなたの直感は理論とよく一致</small>
+                <strong>横軸の意味</strong><br>
+                主観の驚き度を1～10で記録<br>
+                <small>他の人と同じ値にする必要はありません</small>
               </div>
             </div>
             <div class="interpretation-item warning">
               <div class="pattern-icon">⚠️</div>
               <div class="pattern-desc">
-                <strong>改善が必要</strong><br>
-                点が破線から大きくずれる<br>
-                <small>対数的感覚を練習しましょう</small>
+                <strong>縦軸の意味</strong><br>
+                設定確率が小さいほど情報量が大きい<br>
+                <small>縦軸は有限値に合わせて広がります</small>
               </div>
             </div>
             <div class="interpretation-item learning">
               <div class="pattern-icon">📈</div>
               <div class="pattern-desc">
-                <strong>学習中パターン</strong><br>
-                点が徐々に破線に近づく<br>
-                <small>継続的な改善が見られる</small>
+                <strong>確率0の記録</strong><br>
+                ∞はグラフの点に変換しません<br>
+                <small>記録一覧に∞のまま残します</small>
               </div>
             </div>
           </div>
@@ -408,10 +410,10 @@
       <div class="card">
         <h3>🧠 体感のコツ</h3>
         <ul>
-          <li><strong>珍しさ = 情報量</strong>：めったに起きないほど価値のある情報</li>
+          <li><strong>珍しさと情報量</strong>：同じモデルで確率が低いほど情報量が大きい</li>
           <li><strong>予想外度 = 驚き</strong>：期待していなかったほど驚く</li>
           <li><strong>対数的感覚</strong>：確率が1/2→1/4→1/8と半分になるたび、情報量は1bitずつ増加</li>
-          <li><strong>日常の感覚</strong>：「えっ！」「まじで？」「当然でしょ」という感覚が情報量に対応</li>
+          <li><strong>日常の感覚</strong>：感情的な驚きと、確率から計算した情報量を区別</li>
         </ul>
 
         <div class="practice-examples">
@@ -420,17 +422,17 @@
             <div class="example-item">
               <strong>雨が降る</strong><br>
               確率30% → 1.74 bit<br>
-              「あ、やっぱり」程度の驚き
+              確率は教材用の設定
             </div>
             <div class="example-item">
               <strong>雪が降る（夏）</strong><br>
               確率0.01% → 13.29 bit<br>
-              「えええ！？」レベルの驚き
+              実際の気象データではない
             </div>
             <div class="example-item">
               <strong>太陽が昇る</strong><br>
               確率99.99% → 0.0001 bit<br>
-              全く驚かない
+              驚きの感じ方は人によって異なる
             </div>
           </div>
         </div>
@@ -543,7 +545,7 @@
             <p>以下の出来事を情報量の大きい順に並べよ：<br>
             A) 公正なコインで表が出る (P=0.5)<br>
             B) サイコロで1が出る (P=1/6)<br>
-            C) 年末ジャンボで1等当選 (P≈2×10⁻⁸)</p>
+            C) 教材用のくじで特賞 (P=2×10⁻⁸)</p>
             <details>
               <summary>答えを見る</summary>
               <div class="solution">
@@ -712,7 +714,7 @@
 
       <div class="card">
         <h3>⚡ 連続性（Continuity）</h3>
-        <p>確率が少しだけ変化しても情報量が飛び跳ねない（滑らかに変化する）。</p>
+        <p>0&lt;P≤1の各点で連続です。ただしPが0に近いほど変化率は大きく、確率差だけから情報量差の大小は決まりません。</p>
 
         <div class="continuity-demo">
           <div class="comparison-inputs">
@@ -734,14 +736,14 @@
               情報量差：|I₂ - I₁| = <span id="i-diff">0.0290</span> bit
             </div>
             <div class="continuity-status">
-              <span id="continuity-verdict">✅ 連続性が保たれています</span>
+              <span id="continuity-verdict"></span>
             </div>
           </div>
         </div>
 
         <div class="tool-explanation">
           <h4>🔧 連続性の確認方法</h4>
-          <p>上の計算器で近い確率値を入力してみてください。確率が近ければ情報量も近い値になることが確認できます。</p>
+          <p>0.5と0.51、0.0001と0.0101を比べてください。確率差が同じでも情報量差は異なります。</p>
         </div>
       </div>
 
@@ -787,7 +789,7 @@
                 <div>P(A∧B) = <span id="custom-pab">0.12</span></div>
                 <div>I(A∧B) = <span id="custom-iab">3.06</span> bit</div>
                 <div>I(A) + I(B) = <span id="custom-sum">3.06</span> bit</div>
-                <div class="match-check">一致度：<span id="additivity-check">100%</span> ✅</div>
+                <div class="match-check"><span id="additivity-check"></span></div>
               </div>
             </div>
           </div>
@@ -885,8 +887,8 @@
 
         <div class="card">
           <h3>🛡️ エントロピーと攻撃の関係</h3>
-          <p>エントロピー n ビット → 2<sup>n</sup> 通りの可能性 → 平均 2<sup>n-1</sup> 回の試行で破綻</p>
-          <p>例：シーザー暗号（4.7ビット）は26回で、AES-128（128ビット）は宇宙年齢の10²⁰倍の時間が必要。</p>
+          <p>N個の候補が等確率で、重複なく1個ずつ試して正解を判別できるモデルでは、H=log₂N、平均試行回数=(N+1)/2です。</p>
+          <p>一般の偏った分布では、Shannonエントロピーだけから平均試行回数は決まりません。攻撃時間には方式と1秒あたりの試行回数などの条件も必要です。</p>
         </div>
       </div>
 
@@ -895,59 +897,59 @@
         <p>情報量とエントロピーは、データ圧縮の理論的基盤です。</p>
 
         <div class="application-example">
-          <h4>圧縮の実例：文字の頻度</h4>
+          <h4>教材用の1000文字から一部を抜粋した例</h4>
           <div class="compression-demo">
             <div class="char-frequency">
               <table>
-                <tr><th>文字</th><th>頻度</th><th>確率</th><th>情報量</th><th>理想符号長</th></tr>
+                <tr><th>文字</th><th>頻度</th><th>確率</th><th>情報量</th><th>⌈情報量⌉の例</th></tr>
                 <tr><td>E</td><td>127</td><td>12.7%</td><td>2.98 bit</td><td>3 bit</td></tr>
-                <tr><td>T</td><td>91</td><td>9.1%</td><td>3.46 bit</td><td>3-4 bit</td></tr>
+                <tr><td>T</td><td>91</td><td>9.1%</td><td>3.46 bit</td><td>4 bit</td></tr>
                 <tr><td>A</td><td>82</td><td>8.2%</td><td>3.61 bit</td><td>4 bit</td></tr>
                 <tr><td>Z</td><td>1</td><td>0.1%</td><td>9.97 bit</td><td>10 bit</td></tr>
               </table>
             </div>
             <p><strong>原理</strong>：頻出文字ほど短い符号、稀な文字ほど長い符号を割り当てることで、全体の平均符号長を最小化。</p>
-            <p><strong>理論限界</strong>：平均符号長 ≥ エントロピー（シャノンの符号化定理）</p>
+            <p><strong>理論限界</strong>：離散情報源の一意復号可能な符号では平均符号長 ≥ エントロピー。表は完全な分布やHuffman符号の割り当てではありません。</p>
           </div>
         </div>
 
         <div class="practical-tools">
           <h4>身近な圧縮技術</h4>
           <ul>
-            <li><strong>ZIP, RAR</strong>：LZ系アルゴリズム + ハフマン符号</li>
+            <li><strong>ZIPのDEFLATE</strong>：LZ77 + Huffman符号</li>
             <li><strong>JPEG</strong>：DCT変換 + 量子化 + エントロピー符号化</li>
             <li><strong>MP3</strong>：心理音響モデル + 適応的量子化</li>
-            <li><strong>現代AI</strong>：Transformer（GPT）も情報量最小化が目標</li>
+            <li><strong>言語モデル</strong>：正解トークンの予測確率を高めるクロスエントロピー損失を利用</li>
           </ul>
         </div>
       </div>
 
       <div class="card">
         <h3>🔐 暗号学での情報量</h3>
-        <p>暗号の安全性は、鍵や平文の情報量（エントロピー）で定量評価できます。</p>
+        <p>鍵の不確実性と、暗号を破るための計算量は異なります。エントロピーだけでは暗号方式や実装の安全性を判定できません。</p>
 
         <div class="crypto-examples">
           <div class="grid-2">
             <div class="crypto-item">
-              <h4>パスワード強度</h4>
+              <h4>一様ランダムな文字列のモデル</h4>
               <div class="password-entropy">
                 <label>パスワード文字数: <input type="number" id="pwd-length" min="1" max="100" value="8"></label>
                 <label>文字種類数: <input type="number" id="char-types" min="1" max="95" value="62"></label>
                 <div class="result">
                   エントロピー: <span id="pwd-entropy">47.6 bit</span><br>
                   推測回数: <span id="guess-count">1.5 × 10¹⁴ 回</span><br>
-                  安全性: <span id="security-level">中程度</span>
+                  前提: <span id="security-level"></span>
                 </div>
 
                 <div class="tool-explanation">
-                  <h4>🔐 パスワード強度計算器の使い方</h4>
+                  <h4>🔐 文字列モデルの使い方</h4>
                   <ul>
                     <li><strong>文字数</strong>：パスワードの長さを設定</li>
                     <li><strong>文字種類数</strong>：使用可能文字の総数（英大小数字記号=95、英数字=62等）</li>
-                    <li><strong>エントロピー</strong>：情報理論的な強度指標</li>
-                    <li><strong>推測回数</strong>：総当たり攻撃での平均試行回数</li>
+                    <li><strong>エントロピー</strong>：各文字を独立に等確率で選ぶと仮定した不確実性</li>
+                    <li><strong>推測回数</strong>：候補を重複なく試し、正解を判別できる場合の平均(N+1)/2</li>
                   </ul>
-                  <p><strong>目安</strong>：40bit未満=弱い、40-60bit=中程度、60-80bit=強い、80bit以上=非常に強い</p>
+                  <p>人が選んだ単語、再利用、偏りは評価しません。文字列そのものを入力する機能はありません。</p>
                 </div>
               </div>
             </div>
@@ -955,12 +957,13 @@
             <div class="crypto-item">
               <h4>暗号アルゴリズム比較</h4>
               <table class="crypto-table">
-                <tr><th>暗号</th><th>鍵長</th><th>安全性</th></tr>
+                <tr><th>方式</th><th>鍵長</th><th>古典計算での安全強度の目安</th></tr>
                 <tr><td>DES</td><td>56 bit</td><td>破綻済み</td></tr>
-                <tr><td>AES-128</td><td>128 bit</td><td>安全</td></tr>
-                <tr><td>AES-256</td><td>256 bit</td><td>超安全</td></tr>
-                <tr><td>RSA-2048</td><td>2048 bit</td><td>安全</td></tr>
+                <tr><td>AES-128</td><td>128 bit</td><td>128 bit</td></tr>
+                <tr><td>AES-256</td><td>256 bit</td><td>256 bit</td></tr>
+                <tr><td>RSA-2048</td><td>2048 bit</td><td>112 bit</td></tr>
               </table>
+              <p>NIST SP 800-57 Part 1 Rev.5の比較値です。安全性の保証や量子計算への耐性を示す表ではありません。</p>
             </div>
           </div>
         </div>
@@ -971,7 +974,7 @@
           <ul>
             <li><strong>H(平文|暗号文) = H(平文)</strong>：暗号文から平文への情報漏洩ゼロ</li>
             <li><strong>鍵エントロピー ≥ 平文エントロピー</strong>：十分なランダムネス必要</li>
-            <li><strong>ワンタイムパッド</strong>：この条件を満たす唯一の実用暗号</li>
+            <li><strong>ワンタイムパッド</strong>：平文と独立な一様ランダムの鍵を平文と同じ長さだけ用意し、再利用しない場合の例。改ざんを検知する機能は別途必要</li>
           </ul>
         </div>
       </div>
@@ -985,10 +988,10 @@
             <div class="entropy-comparison">
               <h4>共通点</h4>
               <ul>
-                <li><strong>不確実性の尺度</strong>：どちらも「乱雑さ」を定量化</li>
+                <li><strong>不確実性の尺度</strong>：確率分布を使った記述ができる</li>
                 <li><strong>対数的構造</strong>：S = k log W, H = -Σp log p</li>
                 <li><strong>加法性</strong>：独立系では和で表現</li>
-                <li><strong>最大原理</strong>：自然は最大エントロピー状態に向かう</li>
+                <li><strong>注意</strong>：情報エントロピーが時間とともに必ず増えるという法則はない</li>
               </ul>
             </div>
 
@@ -997,8 +1000,8 @@
               <ul>
                 <li><strong>対象</strong>：情報 vs 物理系</li>
                 <li><strong>単位</strong>：bit vs J/K</li>
-                <li><strong>可逆性</strong>：可逆 vs 不可逆過程</li>
-                <li><strong>観測者</strong>：主観的 vs 客観的</li>
+                <li><strong>物理系</strong>：可逆過程と不可逆過程の区別が必要</li>
+                <li><strong>前提</strong>：確率モデルと物理状態の対応を指定する必要がある</li>
               </ul>
             </div>
           </div>
@@ -1009,8 +1012,8 @@
             <ol>
               <li>悪魔が分子の運動を「観測」して仕分け</li>
               <li>観測で「情報」を得る → エントロピー減少？</li>
-              <li>実際は観測に必要なエネルギーがエントロピー増加</li>
-              <li><strong>結論</strong>：情報消去には物理的コストが必要</li>
+              <li>測定そのものに一定の散逸が必須とは限らない。記憶の消去を含めて考える</li>
+              <li><strong>結論</strong>：標準的な熱浴モデルでは、未知の1bitを論理的に不可逆に消去する散逸の下限はkBT ln2</li>
             </ol>
           </div>
         </div>
@@ -1024,7 +1027,7 @@
           <div class="application-grid">
             <div class="ml-item">
               <h4>決定木の分岐基準</h4>
-              <p><strong>情報利得</strong> = H(全体) - H(分割後)</p>
+              <p><strong>情報利得</strong> = H(全体) - 分割後の各群のHの重み付き平均</p>
               <p>最も不確実性を減らす特徴量で分岐</p>
             </div>
 
@@ -1050,10 +1053,10 @@
 
         <div class="information-bottleneck">
           <h4>情報ボトルネック理論</h4>
-          <p>深層学習の動作原理を情報理論で説明：</p>
+          <p>入力Xの表現Tに、目標Yの予測に必要な情報を残すという設計上の考え方です。すべての深層学習が次の段階を通るという意味ではありません。</p>
           <ul>
-            <li><strong>圧縮段階</strong>：I(X;T)を最小化（入力の冗長性除去）</li>
-            <li><strong>汎化段階</strong>：I(T;Y)を最大化（出力との相関強化）</li>
+            <li><strong>圧縮の目的</strong>：I(X;T)を最小化（入力の冗長性除去）</li>
+            <li><strong>予測の目的</strong>：I(T;Y)を最大化（出力との相関強化）</li>
             <li><strong>最適解</strong>：圧縮と予測のトレードオフ</li>
           </ul>
         </div>
