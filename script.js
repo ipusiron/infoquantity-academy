@@ -77,7 +77,7 @@ document.querySelectorAll('.tab').forEach(btn=>{
 /**
  * 情報量グラフ I = -log₂ P の描画
  * 横軸: 確率P (0 < P ≤ 1)
- * 縦軸: 情報量I (0 ≤ I ≤ 8bit)
+ * 縦軸: 情報量I (0 ≤ I ≤ 16bit)
  */
 function drawILog(){
   const canvas = document.getElementById('canvas-logI');
@@ -106,14 +106,13 @@ function drawILog(){
   const Imax = 16; // Values above the plotting range are not replaced by finite caps.
 
   ctx.beginPath();
-  let started = false;
-  for(let i=1;i<=w;i++){
-    const P = i/w;
-    const I = -log2(P);
-    if (I > Imax) continue;
+  // Sample information uniformly so the near-zero part is not lost at pixel resolution.
+  for(let i=0;i<=w;i++){
+    const I = Imax * (1 - i / w);
+    const P = 2 ** -I;
     const y = top + h - I / Imax * h;
-    const x = left + i;
-    if(!started) { ctx.moveTo(x,y); started = true; } else ctx.lineTo(x,y);
+    const x = left + P * w;
+    if(i === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
   }
   // テーマ対応の曲線色
   ctx.strokeStyle = isDark ? '#5aa9ff' : '#0066cc';
@@ -788,5 +787,12 @@ document.querySelectorAll('.error, .quiz-result, #intuition-explanation, #contin
 document.querySelectorAll('.char-frequency').forEach(el => {
   el.tabIndex = 0;
   el.setAttribute('role', 'region');
-  el.setAttribute('aria-label', '文字頻度の表');
+});
+
+document.addEventListener('languagechange', () => {
+  updateCalc(); updateAdd(); updateApt(); updateProp(); updateH();
+  updatePasswordEntropy(); updatePropertiesDisplay();
+  refreshScenario(); renderRecords(); updateQuizScore(); redrawGraphs();
+  document.getElementById('reveal-answer').textContent = t(
+    document.querySelector('.comparison-result').classList.contains('visible') ? 'revealed' : 'reveal');
 });

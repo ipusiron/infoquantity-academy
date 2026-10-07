@@ -215,7 +215,7 @@
         <div class="card">
           <h3>比較：y=a<sup>x</sup> / y=x / y=logₐx</h3>
           <label>底 a を選択:
-            <input id="cmp-base" type="number" min="1.1" step="0.1" value="2">
+            <input id="cmp-base" type="number" max="100" min="1.1" step="0.1" value="2">
           </label>
           <p id="base-error" class="error" role="status"></p>
           <canvas id="canvas-compare" width="520" height="340" aria-label="Compare exp/linear/log graphs"></canvas>
@@ -244,7 +244,7 @@
 
       <div class="card">
         <h3>🎲 驚き度体感スライダー</h3>
-        <p><strong>使い方</strong>：①シナリオ選択 → ②出来事選択 → ③あなたの驚き度を設定 → ④理論値と比較！</p>
+        <p><strong>使い方</strong>：①シナリオ選択 → ②出来事選択 → ③驚き度と予想確率を入力 → ④設定値と比較</p>
 
         <div class="surprise-container">
           <div class="scenario-setup">
@@ -313,8 +313,8 @@
           <div class="usage-tips">
             <h4>💡 効果的な使い方</h4>
             <ul>
-              <li><strong>極端な例を試す</strong>：「宝くじ1等当選」vs「コイン表」で驚き度の違いを実感</li>
-              <li><strong>予想してから確認</strong>：確率を予想→驚き度設定→答え確認の順で直感を鍛錬</li>
+              <li><strong>極端な例を試す</strong>：教材用の「特賞」と「コインの表」で驚き度の違いを記録</li>
+              <li><strong>予想してから確認</strong>：確率を予想してから設定値を確認。驚き度は採点しません</li>
               <li><strong>データを蓄積</strong>：「現在の値を記録」でグラフに点をプロット、傾向を可視化</li>
               <li><strong>対数感覚の訓練</strong>：確率が半分になるたび情報量+1bitの感覚を身につける</li>
             </ul>
@@ -403,10 +403,10 @@
         <div class="practical-tips">
           <h4>💡 実践のコツ</h4>
           <ul>
-            <li><strong>極端な例から始める</strong>：確実な事象(驚き1)と宝くじ級(驚き10)で感覚を掴む</li>
-            <li><strong>中間値を意識</strong>：驚き度5-7の範囲で細かく調整練習</li>
-            <li><strong>一貫性を保つ</strong>：同じような確率には同じような驚き度を設定</li>
-            <li><strong>定期的にリセット</strong>：時々データクリアして成長を確認</li>
+            <li><strong>異なる出来事を比べる</strong>：確実な事象と、まれな事象で感じ方を記録</li>
+            <li><strong>中間の例も記録</strong>：それぞれの出来事をどれほど驚くと感じたかを記録</li>
+            <li><strong>確率と感情を分ける</strong>：同じ確率でも同じ驚き度にする必要はありません</li>
+            <li><strong>記録を振り返る</strong>：予想確率と教材の設定確率を比較</li>
           </ul>
         </div>
       </div>
@@ -559,7 +559,7 @@
                   <li>B: I ≈ 2.58 bit</li>
                   <li>C: I ≈ 25.6 bit</li>
                 </ul>
-                <p>宝くじ1等の情報量は圧倒的！</p>
+                <p>教材用の特賞は情報量が大きい例です。</p>
               </div>
             </details>
           </div>
@@ -599,7 +599,7 @@
           <li>確率は積：P(A∧B) = P(A) × P(B)</li>
           <li>情報量は和：I(A∧B) = I(A) + I(B)</li>
         </ul>
-        <p>この性質を同時に満たす関数は、対数関数 <code>-log P</code> の形に限られます（定数倍を除く）。</p>
+        <p>単調性も仮定すると、この関係を満たす関数は対数関数 <code>-log P</code> の形に限られます（定数倍を除く）。</p>
         <p>つまり、<strong>「独立な情報の組み合わせは、それぞれの情報量の足し算になる」</strong>という自然な要請から、シャノンの定義が導かれるのです。</p>
       </div>
 
@@ -949,7 +949,7 @@
                   <h4>🔐 文字列モデルの使い方</h4>
                   <ul>
                     <li><strong>文字数</strong>：パスワードの長さを設定</li>
-                    <li><strong>文字種類数</strong>：使用可能文字の総数（英大小数字記号=95、英数字=62等）</li>
+                    <li><strong>文字種類数</strong>：使用可能文字の総数（空白を含む印字可能ASCII文字=95、英数字=62等）</li>
                     <li><strong>エントロピー</strong>：各文字を独立に等確率で選ぶと仮定した不確実性</li>
                     <li><strong>推測回数</strong>：候補を重複なく試し、正解を判別できる場合の平均(N+1)/2</li>
                   </ul>
@@ -1017,7 +1017,7 @@
               <li>悪魔が分子の運動を「観測」して仕分け</li>
               <li>観測で「情報」を得る → エントロピー減少？</li>
               <li>測定そのものに一定の散逸が必須とは限らない。記憶の消去を含めて考える</li>
-              <li><strong>結論</strong>：標準的な熱浴モデルでは、未知の1bitを論理的に不可逆に消去する散逸の下限はkBT ln2</li>
+              <li><strong>結論</strong>：標準的な熱浴モデルでは、0と1が等確率の未知の1bitを論理的に不可逆に消去する散逸の下限はkBT ln2</li>
             </ol>
           </div>
         </div>
@@ -1118,6 +1118,8 @@
 
   <script src="core.js"></script>
   <script src="messages.js"></script>
+  <script src="lesson-en.js"></script>
+  <script src="i18n.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
