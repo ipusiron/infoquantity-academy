@@ -26,3 +26,21 @@ test('calculators share the core and do not silently clamp input', () => {
   assert.ok(!js.includes('val = Math.max(0'));
   assert.ok(!js.includes('F = Math.max(1'));
 });
+
+test('strict CSP and local scripts without inline code or handlers', () => {
+  const html = read('index.html');
+  assert.ok(!/unsafe-inline|unsafe-eval|style=|\son\w+=/.test(html));
+  assert.ok(html.includes("connect-src 'none'"));
+  assert.ok(html.includes('rel="noopener noreferrer"'));
+  for (const match of html.matchAll(/<script src="([^"]+)"/g)) {
+    assert.ok(fs.existsSync(path.join(__dirname, '..', match[1])));
+  }
+});
+test('theme initializes before styles and chart drawing adapts to the available width', () => {
+  const html = read('index.html');
+  assert.ok(html.indexOf('settings.js') < html.indexOf('style.css'));
+  const css = read('style.css');
+  assert.ok(css.includes('prefers-reduced-motion'));
+  assert.ok(css.includes('minmax(0,1fr)'));
+  assert.ok(read('script.js').includes('fitCanvas(canvas)'));
+});

@@ -6,19 +6,23 @@
   <title>InfoQuantity Academy - 情報量の基礎学習ツール</title>
   <meta name="description" content="情報量とエントロピーの段階的学習システム。対数クイズから始まり、直感訓練、計算実習、理論確認、実世界応用まで体系的に学習。インタラクティブなグラフと計算器で I(a)=-log2 P(a) を完全理解。" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none';" />
+  <link rel="icon" href="data:," />
   <script src="settings.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode">
-    <span id="theme-icon">🌙</span>
-  </button>
-
   <header class="site-header">
     <h1>InfoQuantity Academy - 情報量の基礎学習ツール</h1>
     <p class="subtitle">コンピューターサイエンスや数学に不慣れでも、「情報量」の直感と定義・性質を対話的に学べる入門ツールです</p>
+    <div class="header-controls">
+      <button id="language-toggle" type="button">English</button>
+      <button class="theme-toggle" id="theme-toggle" aria-label="ライト／ダークを切り替える">
+        <span id="theme-icon" aria-hidden="true">🌙</span>
+      </button>
+    </div>
   </header>
+  <noscript>計算とタブ操作にはJavaScriptが必要です。 / JavaScript is required for calculations and tabs.</noscript>
 
   <nav class="tabs" role="tablist" aria-label="InfoQuantity Academy Tabs">
     <button class="tab active" data-tab="tab-basics" aria-selected="true">1. 基礎知識</button>
@@ -445,8 +449,8 @@
 
       <div class="card">
         <h3>確率の入力</h3>
-        <p style="color: #9fb0c3; font-size: 13px; margin: 0 0 6px;">事象定義： a₀ = 表、a₁ = 裏、a₂ = 立つ、a₃ = 割れる</p>
-        <p style="color: #9fb0c3; font-size: 13px; margin: 0 0 10px;">プリセット例（クリックで自動入力）：</p>
+        <p class="note">事象定義： a₀ = 表、a₁ = 裏、a₂ = 立つ、a₃ = 割れる</p>
+        <p class="note">プリセット例（クリックで自動入力）：</p>
         <div class="scenario-buttons">
           <button class="scenario" data-scn="fair">通常のコイン</button>
           <button class="scenario" data-scn="biased">偏ったコイン</button>
@@ -1108,7 +1112,7 @@
 
   <footer>
     <div class="footer">
-      🔗 GitHubリポジトリはこちら（ <a href="https://github.com/ipusiron/infoquantity-academy" target="_blank">ipusiron/infoquantity-academy</a> ）
+      🔗 GitHubリポジトリーはこちら（ <a href="https://github.com/ipusiron/infoquantity-academy" target="_blank" rel="noopener noreferrer">ipusiron/infoquantity-academy</a> ）
     </div>
   </footer>
 

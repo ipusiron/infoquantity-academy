@@ -49,11 +49,15 @@ themeToggle.addEventListener('click', () => {
 });
 
 /* ========= タブナビゲーション制御 ========= */
-// 5つのタブ間での切り替え処理
+// 7つのタブ間での切り替え処理
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     // 全タブのアクティブ状態をリセット
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', String(b === btn));
+      b.tabIndex = b === btn ? 0 : -1;
+    });
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
 
     // 選択されたタブをアクティブ化
@@ -78,6 +82,7 @@ document.querySelectorAll('.tab').forEach(btn=>{
 function drawILog(){
   const canvas = document.getElementById('canvas-logI');
   if(!canvas) return;
+  fitCanvas(canvas);
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0,0,W,H);
@@ -98,15 +103,17 @@ function drawILog(){
 
   // 情報量曲線の描画 P ∈ (0,1]
   const left = 40, top = 20, w = W-60, h = H-60;
-  const Imax = 8; // 表示上限: P→0で情報量は無限大だが8bitでキャップ
+  const Imax = 16; // Values above the plotting range are not replaced by finite caps.
 
   ctx.beginPath();
-  for(let i=0;i<=w;i++){
-    const P = clamp(i/w, 1e-6, 1); // P=0を避けるため最小値設定
+  let started = false;
+  for(let i=1;i<=w;i++){
+    const P = i/w;
     const I = -log2(P);
-    const y = top + h - Math.min(I, Imax) / Imax * h;
+    if (I > Imax) continue;
+    const y = top + h - I / Imax * h;
     const x = left + i;
-    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    if(!started) { ctx.moveTo(x,y); started = true; } else ctx.lineTo(x,y);
   }
   // テーマ対応の曲線色
   ctx.strokeStyle = isDark ? '#5aa9ff' : '#0066cc';
@@ -147,6 +154,7 @@ function drawCompare(){
   const a = C.number(document.getElementById('cmp-base').value, 1 + Number.EPSILON, 100);
   const canvas = document.getElementById('canvas-compare');
   if(!canvas) return;
+  fitCanvas(canvas);
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0,0,W,H);
@@ -341,7 +349,6 @@ function updateProp(){
   const I = (p>0 && p<=1)? -log2(p) : NaN;
   propIval.textContent = Number.isFinite(I)? I.toFixed(4) : '—';
 }
-propP?.addEventListener('input', updateProp);
 updateProp();
 
 /* ========= 5. エントロピー ========= */
@@ -511,6 +518,7 @@ function drawIntuitionGraph() {
   const canvas = document.getElementById('intuition-graph');
   if (!canvas) return;
 
+  fitCanvas(canvas);
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
@@ -599,6 +607,7 @@ function drawMonotonicGraph() {
   const canvas = document.getElementById('monotonic-canvas');
   if (!canvas) return;
 
+  fitCanvas(canvas);
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
@@ -623,10 +632,10 @@ function drawMonotonicGraph() {
   ctx.lineWidth = 2;
   ctx.beginPath();
   for (let i = 0; i <= graphW; i++) {
-    const P = Math.max(0.001, i / graphW);
+    const P = Math.max(0.0001, i / graphW);
     const I = -log2(P);
     const x = margin + i;
-    const y = margin + graphH - Math.min(I, 8) / 8 * graphH;
+    const y = margin + graphH - I / 16 * graphH;
     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   }
   ctx.stroke();
@@ -635,7 +644,7 @@ function drawMonotonicGraph() {
   const currentP = parseFloat(document.getElementById('propP')?.value || 0.5);
   const currentI = -log2(currentP);
   const currentX = margin + currentP * graphW;
-  const currentY = margin + graphH - Math.min(currentI, 8) / 8 * graphH;
+  const currentY = margin + graphH - currentI / 16 * graphH;
 
   ctx.fillStyle = isDark ? '#ff6b6b' : '#dc3545';
   ctx.beginPath();
@@ -649,8 +658,8 @@ function drawMonotonicGraph() {
     const x = margin + p * graphW;
     ctx.fillText(p.toFixed(1), x - 10, H - margin + 15);
   }
-  for (let i = 0; i <= 8; i += 2) {
-    const y = margin + graphH - i / 8 * graphH;
+  for (let i = 0; i <= 16; i += 4) {
+    const y = margin + graphH - i / 16 * graphH;
     ctx.fillText(i.toString(), margin - 20, y + 4);
   }
 }
@@ -714,8 +723,7 @@ function updatePropertiesDisplay() {
 
 // イベントリスナー
 document.getElementById('propP')?.addEventListener('input', function() {
-  document.getElementById('propPval').textContent = parseFloat(this.value).toFixed(4);
-  document.getElementById('propIval').textContent = fmt(-log2(parseFloat(this.value)), 4);
+  updateProp();
   drawMonotonicGraph();
 });
 
@@ -734,3 +742,51 @@ function redrawGraphs() {
 refreshScenario(true);
 renderRecords();
 updateQuizScore();
+
+function fitCanvas(canvas) {
+  const width = Math.floor(canvas.getBoundingClientRect().width);
+  if (width > 0) {
+    canvas.width = width;
+    canvas.height = Math.max(240, Math.round(width * 2 / 3));
+  }
+}
+window.addEventListener('resize', redrawGraphs);
+const tabButtons = [...document.querySelectorAll('.tab')];
+tabButtons.forEach((button, index) => {
+  button.id = 'button-' + button.dataset.tab;
+  button.setAttribute('role', 'tab');
+  button.setAttribute('aria-controls', button.dataset.tab);
+  button.tabIndex = index === 0 ? 0 : -1;
+  const panel = document.getElementById(button.dataset.tab);
+  panel.setAttribute('role', 'tabpanel');
+  panel.setAttribute('aria-labelledby', button.id);
+  button.addEventListener('keydown', event => {
+    const positions = { ArrowRight: (index + 1) % 7, ArrowLeft: (index + 6) % 7, Home: 0, End: 6 };
+    if (!Object.hasOwn(positions, event.key)) return;
+    event.preventDefault();
+    const target = tabButtons[positions[event.key]];
+    target.click(); target.focus();
+  });
+});
+document.querySelectorAll('.inputs label').forEach((label, index) => {
+  const input = label.parentElement.querySelector('input');
+  if (!input.id) input.id = 'field-' + index;
+  label.htmlFor = input.id;
+});
+document.querySelectorAll('.scenario-select h4, .event-select h4').forEach((label, index) => {
+  label.id = 'select-label-' + index;
+  label.parentElement.querySelector('select').setAttribute('aria-labelledby', label.id);
+});
+document.querySelectorAll('.quiz-question').forEach((question, index) => {
+  const heading = question.querySelector('h4');
+  heading.id = 'quiz-heading-' + index;
+  question.setAttribute('role', 'group');
+  question.setAttribute('aria-labelledby', heading.id);
+});
+document.querySelectorAll('.error, .quiz-result, #intuition-explanation, #continuity-verdict')
+  .forEach(el => el.setAttribute('aria-live', 'polite'));
+document.querySelectorAll('.char-frequency').forEach(el => {
+  el.tabIndex = 0;
+  el.setAttribute('role', 'region');
+  el.setAttribute('aria-label', '文字頻度の表');
+});
