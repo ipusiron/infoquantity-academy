@@ -362,7 +362,12 @@
 
         <canvas id="intuition-graph" width="600" height="400" aria-label="Intuition vs Theory comparison"></canvas>
         <p id="record-note" role="status"></p>
-        <ol id="record-list" aria-label="記録した出来事"></ol>
+        <div class="records-scroll" tabindex="0" role="region" aria-label="記録した出来事">
+          <table class="learning-table records-table">
+            <thead id="record-head"></thead><tbody id="record-list"></tbody>
+          </table>
+        </div>
+        <div id="record-tools"></div>
 
         <div class="graph-controls">
           <button id="add-data-point">現在の値を記録</button>
@@ -1125,5 +1130,6 @@
   <script src="i18n.js"></script>
   <script src="script.js"></script>
   <script src="learning-ui.js"></script>
+  <script src="records-ui.js"></script>
 </body>
 </html>
