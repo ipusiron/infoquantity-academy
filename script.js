@@ -19,7 +19,10 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const log2 = (x) => Math.log(x) / Math.log(2);
 
 // 数値の表示用フォーマット (有限数のみ小数点表示)
-const fmt = (x, d=4) => (Number.isFinite(x) ? x.toFixed(d) : "—");
+const fmt = (x, d=4) => x === Infinity ? '∞' : Number.isFinite(x) ? x.toFixed(d) : '—';
+const C = InfoCore;
+const bit = x => fmt(x) + ' bit';
+function errorText(error) { return t(error || 'invalid'); }
 
 /* ========= テーマ切り替えシステム ========= */
 const themeToggle = document.getElementById('theme-toggle');
@@ -27,7 +30,7 @@ const themeIcon = document.getElementById('theme-icon');
 const html = document.documentElement;
 
 // 初期化: ローカルストレージからテーマ設定を復元
-const savedTheme = localStorage.getItem('theme') || 'dark';
+const savedTheme = html.dataset.theme;
 html.setAttribute('data-theme', savedTheme);
 themeIcon.textContent = savedTheme === 'light' ? '🌙' : '☀️';
 
@@ -38,14 +41,11 @@ themeToggle.addEventListener('click', () => {
 
   // テーマ適用とアイコン更新
   html.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
+  InfoSettings.save('theme', newTheme);
   themeIcon.textContent = newTheme === 'light' ? '🌙' : '☀️';
 
   // Canvas描画はテーマ依存のため再描画が必要
-  if (document.querySelector('.panel.active').id === 'tab-def') {
-    drawILog();
-    drawCompare();
-  }
+  redrawGraphs();
 });
 
 /* ========= タブナビゲーション制御 ========= */
@@ -144,7 +144,7 @@ function drawILog(){
  * 範囲: x∈[0,4], y∈[-4,16]
  */
 function drawCompare(){
-  const a = Number(document.getElementById('cmp-base')?.value || 2);
+  const a = C.number(document.getElementById('cmp-base').value, 1 + Number.EPSILON, 100);
   const canvas = document.getElementById('canvas-compare');
   if(!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -153,6 +153,10 @@ function drawCompare(){
 
   // テーマ判定
   const isDark = html.getAttribute('data-theme') !== 'light';
+
+  const warning = document.getElementById('base-error');
+  if (warning) warning.textContent = a === null ? t('base') : '';
+  if (a === null) return;
 
   // coordinate box for x in [0,4], y in [-4,16] to show exponential growth and negative log values
   const left = 40, top = 20, w = W-60, h = H-60;
@@ -253,43 +257,20 @@ const sEls = ['s0','s1','s2','s3'].map(id=>document.getElementById(id)); // 計�
  * @returns {Object} - {val: 情報量, steps: 計算過程}
  */
 function calcI(p){
-  // 入力値の検証とサニタイズ
-  if (!Number.isFinite(p)) return { val: NaN, steps: '無効な入力値' };
-  p = Math.max(0, Math.min(1, p)); // [0,1]区間にクランプ
-
-  // 特殊ケースの処理
-  if(p === 0) return { val: NaN, steps: 'P=0 のとき log₂0 は未定義 → 計算不能' };
-  if(p < 0) return { val: NaN, steps: 'P<0 は不正' };
-  if(p > 1) return { val: NaN, steps: 'P>1 は不正' };
-
-  // 情報量計算
-  const I = -log2(p);
-  const steps =
-`I = -log₂(P)
-  = -log₂(${p})
-  = ${(-1).toString()} × ${fmt(log2(p),6)}
-  = ${fmt(I,6)} bit`;
-  return { val: I, steps };
+  const val = C.information(p);
+  if (val === null) return { val, steps: t('probability') };
+  return { val, steps: p === 0 ? t('zero') : 'I = −log₂(' + p + ') = ' + fmt(val, 6) + ' bit' };
 }
 function updateCalc(){
-  const ps = pEls.map(el=>{
-    let val = Number(el.value);
-    // Sanitize input
-    if (!Number.isFinite(val)) val = 0;
-    val = Math.max(0, Math.min(1, val));
-    return val;
-  });
-  const s = ps.reduce((a,b)=>a+b,0);
-  sumEl.textContent = s.toFixed(5);
-  if(Math.abs(s-1) > 1e-6){
-    errEl.classList.remove('hidden');
-  } else {
-    errEl.classList.add('hidden');
-  }
-  ps.forEach((p,idx)=>{
-    const {val, steps} = calcI(p);
-    iEls[idx].textContent = Number.isFinite(val) ? fmt(val,4) + ' bit' : '計算不能';
-    sEls[idx].textContent = steps;
+  const result = C.distribution(pEls.map(el => el.value));
+  sumEl.textContent = fmt(result.sum, 5);
+  errEl.classList.toggle('hidden', !result.error);
+  errEl.textContent = result.error ? errorText(result.error) : '';
+  pEls.forEach((el, idx) => {
+    el.setAttribute('aria-invalid', String(C.probability(el.value) === null));
+    const value = result.error ? { val: null, steps: errorText(result.error) } : calcI(result.ps[idx]);
+    iEls[idx].textContent = bit(value.val);
+    sEls[idx].textContent = value.steps;
   });
 }
 pEls.forEach(el=>el.addEventListener('input', updateCalc));
@@ -317,29 +298,15 @@ const IABEl = document.getElementById('IAB');
 const addStepsEl = document.getElementById('add-steps');
 
 function updateAdd(){
-  let pa = Number(paEl.value);
-  let pb = Number(pbEl.value);
-  // Sanitize inputs
-  if (!Number.isFinite(pa)) pa = 0;
-  if (!Number.isFinite(pb)) pb = 0;
-  pa = Math.max(0, Math.min(1, pa));
-  pb = Math.max(0, Math.min(1, pb));
-  const IA = (pa>0 && pa<=1) ? -log2(pa) : NaN;
-  const IB = (pb>0 && pb<=1) ? -log2(pb) : NaN;
-  const pab = pa*pb;
-  const IAB = (pab>0 && pab<=1) ? -log2(pab) : NaN;
-
-  IAEl.textContent = Number.isFinite(IA) ? fmt(IA,4)+' bit' : '計算不能';
-  IBEl.textContent = Number.isFinite(IB) ? fmt(IB,4)+' bit' : '計算不能';
-  IABEl.textContent = Number.isFinite(IAB) ? fmt(IAB,4)+' bit' : '計算不能';
-
-  addStepsEl.textContent =
-`独立事象:  P(A∧B) = P(A) × P(B) = ${fmt(pa)} × ${fmt(pb)} = ${fmt(pab)}
-I(A)   = -log₂ P(A) = ${Number.isFinite(IA)?fmt(IA,6):'—'}
-I(B)   = -log₂ P(B) = ${Number.isFinite(IB)?fmt(IB,6):'—'}
-I(A∧B) = -log₂ P(A∧B) = -log₂(${fmt(pab)}) = ${Number.isFinite(IAB)?fmt(IAB,6):'—'}
-
-確認:  I(A∧B)  = I(A) + I(B)  ≈  ${Number.isFinite(IA)&&Number.isFinite(IB)?fmt(IA+IB,6):'—'}`;
+  const result = C.independent(paEl.value, pbEl.value);
+  IAEl.textContent = bit(result.ia);
+  IBEl.textContent = bit(result.ib);
+  IABEl.textContent = bit(result.combined);
+  addStepsEl.textContent = result.error ? errorText(result.error) :
+    t('independent') + '\n' + result.pa + ' × ' + result.pb + ' = ' + result.product +
+    '\nI(A) + I(B) = ' + fmt(result.ia, 6) + ' + ' + fmt(result.ib, 6) +
+    ' = ' + fmt(result.combined, 6) + ' bit\n' +
+    t(result.underflow ? 'underflow' : result.combined === Infinity ? 'extended' : 'verified');
 }
 [paEl, pbEl].forEach(el=>el.addEventListener('input', updateAdd));
 updateAdd();
@@ -353,30 +320,13 @@ const ItotalEl = document.getElementById('Itotal');
 const aptStepsEl = document.getElementById('apt-steps');
 
 function updateApt(){
-  let F = Number(floorsEl.value);
-  let R = Number(perfloorEl.value);
-  // Sanitize inputs
-  if (!Number.isFinite(F) || F < 1) F = 1;
-  if (!Number.isFinite(R) || R < 1) R = 1;
-  F = Math.max(1, Math.min(1000, Math.floor(F))); // Cap at reasonable values
-  R = Math.max(1, Math.min(1000, Math.floor(R)));
-  const total = F*R;
-  // I(階特定) = -log2(1/F), I(号室特定) = -log2(1/R), I(部屋特定) = -log2(1/(F*R))
-  const If = -log2(1/F);
-  const Ir = -log2(1/R);
-  const It = -log2(1/total);
-
-  IfloorEl.textContent = fmt(If,4)+' bit';
-  IroomEl.textContent = fmt(Ir,4)+' bit';
-  ItotalEl.textContent = fmt(It,4)+' bit';
-
-  aptStepsEl.textContent =
-`総部屋数 = 階数 × 各階の部屋数 = ${F} × ${R} = ${total}
-I(階の特定)     = -log₂(1/${F})   = ${fmt(If,6)} bit
-I(号室の特定)   = -log₂(1/${R})   = ${fmt(Ir,6)} bit
-I(部屋番号の特定) = -log₂(1/${total}) = ${fmt(It,6)} bit
-
-確認: I(階) + I(号室) = ${fmt(If+Ir,6)} ≟ I(部屋) = ${fmt(It,6)}`;
+  const r = C.rooms(floorsEl.value, perfloorEl.value);
+  IfloorEl.textContent = bit(r.floorBits);
+  IroomEl.textContent = bit(r.roomBits);
+  ItotalEl.textContent = bit(r.totalBits);
+  aptStepsEl.textContent = r.error ? errorText(r.error) : t('roomSteps', {
+    f: r.floors, r: r.perFloor, n: r.total, a: fmt(r.floorBits), b: fmt(r.roomBits), c: fmt(r.totalBits)
+  });
 }
 [floorsEl, perfloorEl].forEach(el=>el.addEventListener('input', updateApt));
 updateApt();
@@ -402,31 +352,20 @@ const hvalEl = document.getElementById('hval');
 const hstepsEl = document.getElementById('hsteps');
 
 function entropy(ps){
-  // H = - Σ p log2 p ; 0 log 0 は 0 とみなす（極限）
-  let H = 0;
-  let terms = [];
-  for(const p of ps){
-    if(p > 0){
-      const t = -p * log2(p);
-      H += t;
-      terms.push(`- ${p.toFixed(6)} × log₂(${p.toFixed(6)}) = ${t.toFixed(6)}`);
-    } else if (p===0){
-      terms.push(`- 0 × log₂(0) → 0（極限的に 0 と扱う）`);
-    }
-  }
-  return {H, terms};
+  return C.distribution(ps);
 }
 
 function updateH(){
-  const ps = hxEls.map(el=>Number(el.value));
-  const s = ps.reduce((a,b)=>a+b,0);
-  hsumEl.textContent = s.toFixed(4);
-  if(Math.abs(s-1)>1e-6){ herrEl.classList.remove('hidden'); } else { herrEl.classList.add('hidden'); }
-  const {H, terms} = entropy(ps);
-  hvalEl.textContent = fmt(H,6) + ' bit';
-  hstepsEl.textContent = `H = - Σ p log₂ p
-  = ${terms.length? terms.join('  +\n    ') : '—'}
-  = ${fmt(H,6)} bit`;
+  const r = entropy(hxEls.map(el => el.value));
+  hsumEl.textContent = fmt(r.sum, 6);
+  herrEl.classList.toggle('hidden', !r.error);
+  herrEl.textContent = r.error ? errorText(r.error) : '';
+  hxEls.forEach(el => el.setAttribute('aria-invalid', String(C.probability(el.value) === null)));
+  hvalEl.textContent = bit(r.entropy);
+  hstepsEl.textContent = r.error ? errorText(r.error) :
+    'H = −Σ p log₂p\n' + r.ps.map((p, i) => p === 0 ? t('zeroTerm') :
+      '− ' + p + ' × log₂(' + p + ') = ' + fmt(r.terms[i], 6)).join('\n') +
+    '\nH = ' + fmt(r.entropy, 6) + ' bit';
 }
 hxEls.forEach(el=>el.addEventListener('input', updateH));
 updateH();
@@ -767,20 +706,10 @@ function drawIntuitionGraph() {
 
 // パスワード強度計算
 function updatePasswordEntropy() {
-  const length = parseInt(document.getElementById('pwd-length')?.value || 8);
-  const charTypes = parseInt(document.getElementById('char-types')?.value || 62);
-
-  const entropy = length * log2(charTypes);
-  const guessCount = Math.pow(2, entropy - 1); // 平均試行回数
-
-  let security = '弱い';
-  if (entropy > 80) security = '非常に強い';
-  else if (entropy > 60) security = '強い';
-  else if (entropy > 40) security = '中程度';
-
-  document.getElementById('pwd-entropy').textContent = fmt(entropy, 1) + ' bit';
-  document.getElementById('guess-count').textContent = guessCount.toExponential(1) + ' 回';
-  document.getElementById('security-level').textContent = security;
+  const r = C.password(document.getElementById('pwd-length').value, document.getElementById('char-types').value);
+  document.getElementById('pwd-entropy').textContent = bit(r.bits);
+  document.getElementById('guess-count').textContent = r.error ? '—' : t('attempts', { n: r.average.toExponential(6) });
+  document.getElementById('security-level').textContent = r.error ? errorText(r.error) : t('model');
 }
 
 document.getElementById('pwd-length')?.addEventListener('input', updatePasswordEntropy);
@@ -870,53 +799,24 @@ function drawMonotonicGraph() {
 
 // 連続性計算
 function updateContinuityDemo() {
-  const p1 = parseFloat(document.getElementById('p1-input')?.value || 0.5);
-  const p2 = parseFloat(document.getElementById('p2-input')?.value || 0.51);
-
-  const i1 = -log2(p1);
-  const i2 = -log2(p2);
-
-  document.getElementById('i1-result').textContent = fmt(i1, 4);
-  document.getElementById('i2-result').textContent = fmt(i2, 4);
-  document.getElementById('p-diff').textContent = Math.abs(p2 - p1).toFixed(4);
-  document.getElementById('i-diff').textContent = Math.abs(i2 - i1).toFixed(4);
-
-  // 連続性判定
-  const pDiff = Math.abs(p2 - p1);
-  const iDiff = Math.abs(i2 - i1);
-  const verdict = document.getElementById('continuity-verdict');
-
-  if (pDiff < 0.1 && iDiff < 1.0) {
-    verdict.textContent = '✅ 連続性が保たれています';
-    verdict.style.color = 'var(--accent2)';
-  } else if (pDiff < 0.2) {
-    verdict.textContent = '⚠️ やや連続的です';
-    verdict.style.color = 'var(--warn)';
-  } else {
-    verdict.textContent = '❌ 大きな変化です';
-    verdict.style.color = 'var(--warn)';
-  }
+  const r = C.compare(document.getElementById('p1-input').value, document.getElementById('p2-input').value);
+  document.getElementById('i1-result').textContent = fmt(r.ia);
+  document.getElementById('i2-result').textContent = fmt(r.ib);
+  document.getElementById('p-diff').textContent = fmt(r.probabilityDifference);
+  document.getElementById('i-diff').textContent = fmt(r.informationDifference);
+  document.getElementById('continuity-verdict').textContent = r.error ? errorText(r.error) :
+    t(r.pa === 0 || r.pb === 0 ? 'continuityZero' : 'continuity');
 }
 
 // 加法性の計算
 function updateAdditivityDemo() {
-  const pa = parseFloat(document.getElementById('custom-pa')?.value || 0.3);
-  const pb = parseFloat(document.getElementById('custom-pb')?.value || 0.4);
-
-  const ia = -log2(pa);
-  const ib = -log2(pb);
-  const pab = pa * pb;
-  const iab = -log2(pab);
-  const sum = ia + ib;
-
-  document.getElementById('custom-ia').textContent = fmt(ia, 2);
-  document.getElementById('custom-ib').textContent = fmt(ib, 2);
-  document.getElementById('custom-pab').textContent = fmt(pab, 4);
-  document.getElementById('custom-iab').textContent = fmt(iab, 2);
-  document.getElementById('custom-sum').textContent = fmt(sum, 2);
-
-  const match = Math.abs(iab - sum) < 0.001 ? 100 : Math.max(0, 100 - Math.abs(iab - sum) * 100);
-  document.getElementById('additivity-check').textContent = Math.round(match) + '%';
+  const r = C.independent(document.getElementById('custom-pa').value, document.getElementById('custom-pb').value);
+  for (const [id, value] of Object.entries({
+    'custom-ia': r.ia, 'custom-ib': r.ib, 'custom-pab': r.product,
+    'custom-iab': r.combined, 'custom-sum': r.combined
+  })) document.getElementById(id).textContent = fmt(value);
+  document.getElementById('additivity-check').textContent = r.error ? errorText(r.error) :
+    t(r.underflow ? 'underflow' : r.combined === Infinity ? 'extended' : 'verified');
 }
 
 // 規格化の計算
@@ -969,3 +869,7 @@ document.getElementById('norm-base')?.addEventListener('change', updateNormaliza
 
 // 初期化
 updatePropertiesDisplay();
+
+function redrawGraphs() {
+  drawILog(); drawCompare(); drawIntuitionGraph(); drawMonotonicGraph();
+}
