@@ -138,3 +138,21 @@ test('language changes rerender all derived output without HTML interpolation', 
   assert.ok(!read('i18n.js').includes('innerHTML'));
   assert.ok(read('i18n.js').includes("history.replaceState"));
 });
+
+test('README の「このツールならではの使い方」を計算部で再計算（日英）', () => {
+  const core = require('../core.js');
+  assert.equal(core.information(0.5), 1);
+  assert.equal(core.information(1 / 6).toFixed(2), '2.58');
+  assert.equal(core.information(0.001).toFixed(2), '9.97');
+  const ind = core.independent(0.5, 1 / 6);
+  assert.equal(ind.combined.toFixed(2), '3.58');
+  assert.equal((ind.ia + ind.ib).toFixed(2), '3.58');
+  assert.equal(ind.product.toFixed(4), (1 / 12).toFixed(4));
+  assert.equal(core.distribution([0.25, 0.25, 0.25, 0.25]).entropy, 2);
+  assert.equal(core.distribution([0.9, 0.1]).entropy.toFixed(2), '0.47');
+  for (const md of [ja, en]) {
+    assert.ok(md.includes('1 bit') && md.includes('2.58') && md.includes('9.97'));
+    assert.ok(md.includes('3.58'));
+    assert.ok(md.includes('2 bit') && md.includes('0.47'));
+  }
+});

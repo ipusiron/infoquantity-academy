@@ -226,6 +226,12 @@ If the product of independent probabilities underflows the floating-point range,
 
 ## 💡 Practical learning scenarios
 
+Ways of using this tool in particular
+
+- Confirming that a rarer event carries more information (the definition of information): a coin landing heads at probability 0.5 is 1 bit, rolling a 1 on a die at probability 1/6 is about 2.58 bits, and a rare event at probability 0.001 is about 9.97 bits. The smaller the probability, the greater the surprise of learning it happened, and the more information. You can confirm with numbers that information is set by the log of the probability (-log2 p)
+- Confirming that the information of independent events adds up (a property of logarithms): a coin's heads at 0.5 (1 bit) and a die's 1 at 1/6 (about 2.58 bits) happening together carry about 3.58 bits, the sum of the two. The probability of both is 0.5 x 1/6 = 1/12, a product, but taking the log turns the information into a sum. You can confirm how the logarithm turns multiplication into addition
+- Confirming that entropy is maximal for a uniform distribution (entropy classes): with four equally likely outcomes (0.25 each) the entropy is 2 bits, the maximum for four cases (log2 4). For a biased distribution of 0.9 and 0.1 it drops to about 0.47 bits. You can confirm, by changing the distribution, that the average information is maximal when the outcome is hardest to read (uniform) and falls as it becomes biased
+
 ### Comparing probabilities in class
 
 Heads on a fair coin gives 1 bit; rolling a 1 on a fair die gives about 2.58 bit. Predicting probabilities before viewing the model values can support discussion of the difference between probability and emotion.
